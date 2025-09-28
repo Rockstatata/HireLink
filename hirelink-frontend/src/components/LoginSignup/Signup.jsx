@@ -1,17 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/media/JobHunter.png";
-import { userService } from "../../services/userService";
-import useUpdateUserData from "../../hooks/useUpdateUserData";
 
-function Signup() {
+function Signup({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const updateUser = useUpdateUserData();
 
   const [userType, setUserType] = useState("jobSeeker");
   const [loading, setLoading] = useState(false);
@@ -44,8 +40,6 @@ function Signup() {
     }
   };
 
-  const navigate = useNavigate();
-
   const postUserData = async (data) => {
     setLoading(true);
     const { name, email, password } = data;
@@ -57,29 +51,20 @@ function Signup() {
     };
 
     try {
-      const res = await userService.signup(userData);
-      if (res.data.statusCode === 201) {
-        const res = await userService.login({ email, password });
-        if (res.status === 200) {
-          const userData = await userService.getCurrentUser();
-          if (userData) {
-            console.log(userData);
-            if (userData.role === "jobSeeker") {
-              navigate("/user-onboarding");
-            } else {
-              navigate("/company-onboarding");
-            }
-
-            updateUser();
-          }
-        }
+      // Simulate API call
+      console.log("Signup data:", userData);
+      
+      // Simulate success
+      setTimeout(() => {
         setLoading(false);
-      }
+        alert("Account created successfully!");
+      }, 1000);
+      
     } catch (error) {
-      setErrorMessage(error.response.data.message);
+      setErrorMessage("Something went wrong. Please try again.");
       resetErrorMessage();
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 1000);
     }
   };
 
@@ -94,14 +79,14 @@ function Signup() {
   return (
     <div>
       <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-gray-800 px-16 mt-3">
-        <Link to="/" className="flex items-center font-Poppins">
+        <a href="/" className="flex items-center font-Poppins">
           <img
             src={logo}
             className="w-10 rounded-lg mr-3"
             alt="JobHunter Logo"
           />
           / jobhunter
-        </Link>
+        </a>
       </div>
       <div className="flex flex-col sm:flex-row">
         <div className="sm:w-3/6 sm:h-screen flex items-center justify-center sm:pt-5 sm:pl-5 md:w-3/5 lg:pl-16 lg:pt-5">
@@ -233,9 +218,20 @@ function Signup() {
             <div className="mt-3">
               <p className=" cursor-pointer text-center">
                 Already have an account?
-                <Link to="/login" className="underline pl-1">
+                <a 
+                  href="#" 
+                  className="underline pl-1" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onSwitchToLogin) {
+                      onSwitchToLogin();
+                    } else {
+                      alert("Login functionality coming soon!");
+                    }
+                  }}
+                >
                   Login here
-                </Link>
+                </a>
               </p>
             </div>
           </div>
