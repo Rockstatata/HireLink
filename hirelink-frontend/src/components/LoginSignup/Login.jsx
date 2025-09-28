@@ -1,13 +1,7 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/media/JobHunter.png";
-import { userService } from "../../services/userService";
-import useUpdateUserData from "../../hooks/useUpdateUserData";
 
-function Login() {
-  const navigate = useNavigate();
-  const updateUser = useUpdateUserData();
-
+function Login({ onSwitchToSignup }) {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -37,47 +31,43 @@ function Login() {
   const makeLoginRequest = async (userData) => {
     setLoading(true);
     try {
-      const res = await userService.login(userData);
-      if (res.status === 200) {
-        const userData = await userService.getCurrentUser();
-        if (userData) {
-          await updateUser();
-          if (userData.role === "jobSeeker") {
-            if (userData.userProfile.doneOnboarding === true) {
-              navigate("/");
-            } else {
-              navigate("/user-onboarding");
-            }
-          } else if (userData.role === "employer") {
-            if (userData.userProfile.doneOnboarding === true) {
-              console.log("Sending to dashboard");
-              navigate("/dashboard/home");
-            } else {
-              console.log(userData);
-              navigate("/company-onboarding");
-            }
-          }
-        }
+      // Simulate login validation
+      const { email, password } = userData;
+      
+      if (!email || !password) {
+        setErrorMessage("Please fill in all fields.");
+        resetErrorMessage();
+        return;
       }
+
+      // Simulate API call
+      console.log("Login attempt:", userData);
+      
+      // Simulate success after delay
+      setTimeout(() => {
+        setLoading(false);
+        alert("Login successful!");
+      }, 1000);
+      
     } catch (error) {
-      setErrorMessage(error.response.data.message);
+      setErrorMessage("Login failed. Please check your credentials.");
       resetErrorMessage();
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 1000);
     }
   };
 
   return (
     <div>
       <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-gray-800 px-16 mt-3">
-        <Link to="/" className="flex items-center font-Poppins">
+        <a href="/" className="flex items-center font-Poppins">
           <img
             src={logo}
             className="w-10 rounded-lg mr-3"
             alt="JobHunter Logo"
           />
           / jobhunter
-        </Link>
+        </a>
       </div>
       <div className="flex flex-col sm:flex-row">
         <div className="sm:w-3/6 sm:h-screen flex items-center justify-center sm:pt-5 sm:pl-5 md:w-3/5 lg:pl-16 lg:pt-5">
@@ -158,9 +148,20 @@ function Login() {
             <div className="mt-5">
               <p className="cursor-pointer text-center">
                 Don't have an account?{" "}
-                <Link to="/signup" className="underline">
+                <a 
+                  href="#" 
+                  className="underline" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onSwitchToSignup) {
+                      onSwitchToSignup();
+                    } else {
+                      alert("Signup functionality coming soon!");
+                    }
+                  }}
+                >
                   Sign up
-                </Link>
+                </a>
               </p>
             </div>
           </div>
