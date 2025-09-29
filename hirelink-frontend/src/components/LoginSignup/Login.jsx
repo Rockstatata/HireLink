@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import logo from "../assets/media/JobHunter.png";
+import { Link } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import logo from "../assets/media/hirelink.png";
+import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
+import { loginUser } from '../../services/userService';
 
-function Login({ onSwitchToSignup }) {
+function Login() {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -29,53 +34,36 @@ function Login({ onSwitchToSignup }) {
   };
 
   const makeLoginRequest = async (userData) => {
-    setLoading(true);
+    dispatch(loginStart());
     try {
-      // Simulate login validation
-      const { email, password } = userData;
-      
-      if (!email || !password) {
-        setErrorMessage("Please fill in all fields.");
-        resetErrorMessage();
-        return;
-      }
-
-      // Simulate API call
-      console.log("Login attempt:", userData);
-      
-      // Simulate success after delay
-      setTimeout(() => {
-        setLoading(false);
-        alert("Login successful!");
-      }, 1000);
-      
+      const response = await loginUser(userData);
+      dispatch(loginSuccess(response.data.data.user));
+      alert('Login successful!');
     } catch (error) {
-      setErrorMessage("Login failed. Please check your credentials.");
+      dispatch(loginFailure());
+      setErrorMessage(error.response?.data?.message || 'Login failed.');
       resetErrorMessage();
-    } finally {
-      setTimeout(() => setLoading(false), 1000);
     }
   };
 
   return (
     <div>
-      <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-gray-800 px-16 mt-3">
-        <a href="/" className="flex items-center font-Poppins">
+      <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-text-primary px-16 mt-3">
+        <Link to="/" className="flex items-center font-poppins">
           <img
             src={logo}
-            className="w-10 rounded-lg mr-3"
-            alt="JobHunter Logo"
+            className="w-20 rounded-lg mr-3"
+            alt="HireLink Logo"
           />
-          / jobhunter
-        </a>
+        </Link>
       </div>
       <div className="flex flex-col sm:flex-row">
         <div className="sm:w-3/6 sm:h-screen flex items-center justify-center sm:pt-5 sm:pl-5 md:w-3/5 lg:pl-16 lg:pt-5">
-          <div className="h-full w-full sm:text-right sm:pr-12 bg-black sm:pt-24 sm:pl-14 text-green-500 sm:rounded-t-lg lg:pt-44">
+          <div className="h-full w-full sm:text-right sm:pr-12 bg-primary sm:pt-24 sm:pl-14 text-text-inverse sm:rounded-t-lg lg:pt-44">
             <h2 className="py-4 text-xl text-center sm:text-5xl sm:text-right font-bold sm:mb-5 sm:pl-4 xl:text-6xl ">
               Find the job made for you.
             </h2>
-            <p className="hidden sm:block font-light sm:pl-3 sm:text-lg text-white xl:text-xl xl:pl-16">
+            <p className="hidden sm:block font-light sm:pl-3 sm:text-lg text-text-inverse xl:text-xl xl:pl-16">
               Browse over 130K jobs at top companies and fast-growing startups.
             </p>
           </div>
@@ -83,11 +71,11 @@ function Login({ onSwitchToSignup }) {
 
         <div className="w-full sm:w-3/6 pt-7 sm:pt-14 md:w-2/5">
           <div className="p-3 sm:p-10">
-            <h2 className="text-3xl font-bold">Login</h2>
-            <p className="mt-3">Find the job made for you!</p>
+            <h2 className="text-3xl font-bold text-text-primary">Login</h2>
+            <p className="mt-3 text-text-secondary">Find the job made for you!</p>
             <form className="mt-6" onSubmit={handleFormSubmission}>
               <div className="flex flex-col">
-                <label className=" font-semibold">Email:</label>
+                <label className="font-semibold text-text-primary">Email:</label>
 
                 <input
                   type="text"
@@ -95,10 +83,10 @@ function Login({ onSwitchToSignup }) {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-gray-400"
+                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
                   placeholder="Email"
                 />
-                <label className=" font-semibold">Password:</label>
+                <label className="font-semibold text-text-primary">Password:</label>
 
                 <input
                   type="password"
@@ -106,22 +94,22 @@ function Login({ onSwitchToSignup }) {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-gray-400"
+                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
                   placeholder="Password"
                 />
                 <div className="flex justify-between">
-                  <span className="text-red-600 text-sm ml-2">
+                  <span className="text-error text-sm ml-2">
                     {errorMessage}
                   </span>
                   <a
                     href="#"
-                    className="text-right font-light text-black cursor-pointer mb-3 underline"
+                    className="text-right font-light text-text-primary cursor-pointer mb-3 underline"
                   >
                     Forget Password?
                   </a>
                 </div>
 
-                <button className="bg-black rounded-md text-white font-normal text-sm h-11">
+                <button className="bg-primary rounded-md text-text-inverse font-normal text-sm h-11 hover:bg-primary-dark transition-colors">
                   {loading ? "Logging in..." : "Login"}
                 </button>
               </div>
@@ -146,22 +134,14 @@ function Login({ onSwitchToSignup }) {
               </span>
             </button>
             <div className="mt-5">
-              <p className="cursor-pointer text-center">
+              <p className="cursor-pointer text-center text-text-secondary">
                 Don't have an account?{" "}
-                <a 
-                  href="#" 
-                  className="underline" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onSwitchToSignup) {
-                      onSwitchToSignup();
-                    } else {
-                      alert("Signup functionality coming soon!");
-                    }
-                  }}
+                <Link 
+                  to="/signup" 
+                  className="underline text-primary hover:text-primary-dark"
                 >
                   Sign up
-                </a>
+                </Link>
               </p>
             </div>
           </div>
