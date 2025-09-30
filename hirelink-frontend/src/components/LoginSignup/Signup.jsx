@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import logo from "../assets/media/JobHunter.png";
+import { Link } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import logo from "../assets/media/hirelink.png";
+import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
+import { registerUser, getCurrentUser } from '../../services/userService';
+import { useNavigate } from "react-router-dom";
+import useUpdateUserData from "../../hooks/useUpdateUserData";
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
-function Signup({ onSwitchToLogin }) {
+function Signup() {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -9,9 +17,14 @@ function Signup({ onSwitchToLogin }) {
     confirmPassword: "",
   });
 
+  const navigate = useNavigate();
+  const updateUser = useUpdateUserData();
+
   const [userType, setUserType] = useState("jobSeeker");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const resetErrorMessage = () => {
     setTimeout(() => {
       setErrorMessage("");
@@ -41,30 +54,37 @@ function Signup({ onSwitchToLogin }) {
   };
 
   const postUserData = async (data) => {
-    setLoading(true);
-    const { name, email, password } = data;
-    const userData = {
-      email,
-      password,
-      role: userType === "employer" ? "employer" : "jobSeeker",
-      userProfile: userType === "employer" ? { companyName: name } : { name },
-    };
-
+    dispatch(loginStart());
     try {
-      // Simulate API call
-      console.log("Signup data:", userData);
-      
-      // Simulate success
-      setTimeout(() => {
-        setLoading(false);
-        alert("Account created successfully!");
-      }, 1000);
-      
+      const payload = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: userType,  // Mapped 'userType' to 'role' for backend
+      };
+      const response = await registerUser(payload);  // Updated to send 'payload' instead of 'data'
+      dispatch(loginSuccess(response.data.data.user));
+      alert('Account created successfully!');
+      const currentUserResponse = await getCurrentUser();
+      const userData = currentUserResponse.data.data.user;
+      if (userData) {
+        console.log(userData);
+        if (userData.role === "jobSeeker") {
+          navigate("/user-onboarding");
+        } else {
+          navigate("/company-onboarding");
+        }
+
+        updateUser();
+      }
+       setLoading(false);
     } catch (error) {
-      setErrorMessage("Something went wrong. Please try again.");
+      dispatch(loginFailure());
+      setErrorMessage(error.response?.data?.message || 'Registration failed.');
       resetErrorMessage();
-    } finally {
-      setTimeout(() => setLoading(false), 1000);
+    }
+    finally{
+      setLoading(false);
     }
   };
 
@@ -78,29 +98,28 @@ function Signup({ onSwitchToLogin }) {
 
   return (
     <div>
-      <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-gray-800 px-16 mt-3">
-        <a href="/" className="flex items-center font-Poppins">
+      <div className="hidden font-semibold text-xl cursor-pointer md:flex items-center text-text-primary px-16 mt-3">
+        <Link to="/" className="flex items-center font-poppins">
           <img
             src={logo}
-            className="w-10 rounded-lg mr-3"
-            alt="JobHunter Logo"
+            className="w-20 rounded-lg mr-3"
+            alt="HireLink Logo"
           />
-          / jobhunter
-        </a>
+        </Link>
       </div>
       <div className="flex flex-col sm:flex-row">
         <div className="sm:w-3/6 sm:h-screen flex items-center justify-center sm:pt-5 sm:pl-5 md:w-3/5 lg:pl-16 lg:pt-5">
-          <div className="h-full w-full sm:text-right sm:pr-12 bg-black sm:pt-24 sm:pl-14 text-green-500 sm:rounded-t-lg lg:pt-44">
+          <div className="h-full w-full sm:text-right sm:pr-12 bg-primary sm:pt-24 sm:pl-14 text-text-inverse sm:rounded-t-lg lg:pt-44">
             <h2 className="py-4 text-xl text-center sm:text-5xl sm:text-right font-bold sm:mb-5 sm:pl-4 xl:text-6xl ">
               {userType === "jobSeeker"
                 ? "Find the job made for you."
                 : userType === "employer" &&
-                  (Math.random() > 0.5
-                    ? "Discover the perfect fit for your team."
-                    : "Unearth the gem your organization needs.")}
+                (Math.random() > 0.5
+                  ? "Discover the perfect fit for your team."
+                  : "Unearth the gem your organization needs.")}
             </h2>
 
-            <p className="hidden sm:block font-light sm:pl-3 sm:text-lg text-white xl:text-xl xl:pl-16">
+            <p className="hidden sm:block font-light sm:pl-3 sm:text-lg text-text-inverse xl:text-xl xl:pl-16">
               {userType === "jobSeeker"
                 ? "Browse over 130K jobs at top companies and fast-growing startups."
                 : "Browse through a vast pool of talented job seekers."}
@@ -112,25 +131,23 @@ function Signup({ onSwitchToLogin }) {
           <div className="flex flex-col md:flex-row justify-center items-center gap-5 ">
             <div
               onClick={() => setUserType("jobSeeker")}
-              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-gray-600 ${
-                userType === "jobSeeker" ? "bg-black text-white" : "bg-gray-200"
-              }`}
+              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${userType === "jobSeeker" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
+                }`}
             >
               I am a Job Seeker
             </div>
             <div
               onClick={() => setUserType("employer")}
-              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-gray-600 ${
-                userType === "employer" ? "bg-black text-white" : "bg-gray-200"
-              }`}
+              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${userType === "employer" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
+                }`}
             >
               I am an Employer
             </div>
           </div>
 
           <div className="p-3 sm:p-10 ">
-            <h2 className=" text-3xl font-bold ">Create Account</h2>
-            <p className="mt-3">
+            <h2 className=" text-3xl font-bold text-text-primary">Create Account</h2>
+            <p className="mt-3 text-text-secondary">
               {userType === "jobSeeker"
                 ? "Find your next opportunity!"
                 : "Find the best talents!"}
@@ -138,7 +155,7 @@ function Signup({ onSwitchToLogin }) {
 
             <form className="mt-3" onSubmit={handleFormSubmission}>
               <div className="flex flex-col">
-                <label className=" font-semibold">
+                <label className=" font-semibold text-text-primary">
                   {userType === "employer" ? "Company Name:" : "Full Name:"}
                 </label>
                 <input
@@ -147,50 +164,67 @@ function Signup({ onSwitchToLogin }) {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-gray-400"
-                  placeholder={`Enter ${
-                    userType === "employer" ? "company name" : "name"
-                  }`}
+                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
+                  placeholder={`Enter ${userType === "employer" ? "company name" : "name"
+                    }`}
                 />
 
-                <label className=" font-semibold">Email Address:</label>
+                <label className=" font-semibold text-text-primary">Email Address:</label>
                 <input
                   type="text"
                   name="email"
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-gray-400"
+                  className="rounded h-10 text-base pl-5 mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
                   placeholder="user@mail.com"
                 />
 
-                <label className=" font-semibold ">Password:</label>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-gray-400"
-                  placeholder="min 8 characters"
-                />
+                <label className=" font-semibold text-text-primary">Password:</label>
+                <div className="relative mb-3">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="rounded h-10 pl-5 pr-12 text-base w-full border-x border-y border-neutral-400 bg-background text-text-primary"
+                    placeholder="min 8 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-primary hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                  </button>
+                </div>
 
-                <label className=" font-semibold">Confirm Password:</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-gray-400"
-                  placeholder="confirm password"
-                />
-                <span className="text-red-600 text-sm ml-2">
+                <label className=" font-semibold text-text-primary">Confirm Password:</label>
+                <div className="relative mb-3">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="rounded h-10 pl-5 pr-12 text-base w-full border-x border-y border-neutral-400 bg-background text-text-primary"
+                    placeholder="confirm password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-primary hover:text-primary transition-colors"
+                  >
+                    {showConfirmPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                  </button>
+                </div>
+                <span className="text-error text-sm ml-2">
                   {errorMessage}
                 </span>
                 <button
                   type="submit"
-                  className="bg-black rounded-md text-white font-normal text-sm h-11 mt-3"
+                  className="bg-primary rounded-md text-text-inverse font-normal text-sm h-11 mt-3 hover:bg-primary-dark transition-colors"
                 >
                   {loading ? "Creating Account..." : "Create Account"}
                 </button>
@@ -216,22 +250,14 @@ function Signup({ onSwitchToLogin }) {
               </button>
             </div>
             <div className="mt-3">
-              <p className=" cursor-pointer text-center">
+              <p className=" cursor-pointer text-center text-text-secondary">
                 Already have an account?
-                <a 
-                  href="#" 
-                  className="underline pl-1" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onSwitchToLogin) {
-                      onSwitchToLogin();
-                    } else {
-                      alert("Login functionality coming soon!");
-                    }
-                  }}
+                <Link
+                  to="/login"
+                  className="underline pl-1 text-primary hover:text-primary-dark"
                 >
                   Login here
-                </a>
+                </Link>
               </p>
             </div>
           </div>
