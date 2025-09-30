@@ -4,20 +4,20 @@ import { Navigate } from "react-router-dom";
 import { setLoadingFalse } from "../store/authSlice";
 
 function PrivateRoutes({ children }) {
-  const { status, userData, isLoading } = useSelector((store) => store.auth);
+  const { userData, loading } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   //
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (isLoading) {
+      if (loading) {
         dispatch(setLoadingFalse());
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [isLoading, dispatch]);
+  }, [loading, dispatch]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center text-gray-600 h-screen">
         Loading...

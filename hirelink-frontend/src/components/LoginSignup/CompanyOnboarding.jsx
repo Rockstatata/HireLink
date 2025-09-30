@@ -1,136 +1,309 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
+import InputField from "../Common/FormComponents/InputField";
+import CompanySearch from "../Common/CompanySearch";
+import { updateUserProfile } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
 
-const CompanyOnboarding = () => {
-  const [formData, setFormData] = useState({
-    companyName: '',
-    email: '',
-    industry: '',
-    companySize: '',
-    location: '',
-    requirements: '',
-    description: ''
+function CompanyOnboarding() {
+  const [companyProfile, setCompanyProfile] = useState({
+    companyName: "",
+    companyDescription: "",
+    contactNumber: "",
+    industry: "",
+    address: {
+      city: "",
+      state: "",
+      country: "",
+    },
+    companySize: {
+      from: "",
+      to: "",
+    },
+    companyLogo:
+      "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg",
+    companyWebsite: "",
+    companySocialProfiles: {
+      linkedIn: "",
+      twitter: "",
+      portfolioWebsite: "",
+    },
+    employeeBenefits: [],
   });
+  const [showDropdown, setShowDropdown] = useState(true);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setCompanyProfile((prevProfile) => ({
+        ...prevProfile,
+        [parent]: {
+          ...prevProfile[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      setCompanyProfile((prevProfile) => ({
+        ...prevProfile,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form Data:', formData);
-    // Here you can handle form submission, e.g., send to backend
+    updateData({ ...companyProfile, doneOnboarding: true });
+  };
+
+  const updateData = async (data) => {
+    try {
+      const res = await updateUserProfile(data);
+      if (res.status === 200) {
+        navigate("/dashboard/home");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDropdown = (item) => {
+    handleCompanyInput(item);
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleCompanyInput = (company) => {
+    const { name, logo, domain } = company;
+
+    setCompanyProfile((prevProfile) => ({
+      ...prevProfile,
+      companyName: name,
+      companyLogo:
+        logo ||
+        "https://photos.wellfound.com/startups/i/267839-22e9550a168c9834c67a3e55e2577688-medium_jpg.jpg?buster=1677467708",
+      companySocialProfiles: {
+        ...prevProfile.companySocialProfiles,
+        portfolioWebsite: domain,
+      },
+    }));
   };
 
   return (
-    <div className="company-onboarding max-w-4xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-2xl border border-gray-200">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold mb-4 text-gray-800">Company Onboarding</h2>
-        <p className="text-lg text-gray-600">Welcome to HireLink! Please fill out your company details.</p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Company Name:</span>
-          <input
-            type="text"
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            placeholder="Enter your company name"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Email:</span>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="company@example.com"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Location:</span>
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="City, State, Country"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Industry:</span>
-          <input
-            type="text"
-            name="industry"
-            value={formData.industry}
-            onChange={handleChange}
-            placeholder="e.g., Technology, Healthcare, Finance"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Company Size:</span>
-          <select
-            name="companySize"
-            value={formData.companySize}
-            onChange={handleChange}
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            required
-          >
-            <option value="">Select size</option>
-            <option value="1-10">1-10 employees</option>
-            <option value="11-50">11-50 employees</option>
-            <option value="51-200">51-200 employees</option>
-            <option value="201+">201+ employees</option>
-          </select>
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Hiring Requirements:</span>
-          <textarea
-            name="requirements"
-            value={formData.requirements}
-            onChange={handleChange}
-            placeholder="Describe the skills, experience, and qualifications you're looking for in candidates"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            rows="5"
-            required
-          />
-        </label>
-        <label className="block">
-          <span className="text-lg font-medium text-gray-700">Company Description:</span>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Tell us about your company, its mission, values, and what makes it unique"
-            className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            rows="5"
-            required
-          />
-        </label>
-        <div className="text-center pt-4">
-          <button
-            type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white text-lg font-semibold rounded-lg hover:from-green-500 hover:to-blue-600 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
-            Submit
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-primary-light/10 via-background to-primary/5 flex items-center justify-center py-8 px-4">
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-12">
+          <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
+            Complete your profile
+          </h2>
+          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            Find the best fit for your organisation among thousands of talents
+          </p>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-primary/10 p-6 md:p-8">
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-primary/5 to-primary-light/5 rounded-xl p-6 border border-primary/10">
+                <h3 className="text-2xl font-semibold text-text-primary mb-6 flex items-center justify-center">
+                  <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-text-inverse text-sm font-bold mr-3">1</span>
+                  Company Information
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <label className="block text-lg font-medium text-text-primary mb-3">
+                      <span className="text-red-500 mr-1">*</span>Company Name
+                    </label>
+                    <div className="flex justify-center">
+                      {showDropdown ? (
+                        <CompanySearch
+                          handleDropdown={handleDropdown}
+                          width="w-full md:w-1/2"
+                        />
+                      ) : (
+                        <div className="flex justify-between items-center p-4 bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-lg border border-neutral-200 shadow-sm max-w-md">
+                          <div className="flex items-center">
+                            <img
+                              src={companyProfile.companyLogo}
+                              alt={companyProfile.companyName}
+                              className="w-12 h-12 rounded-full mr-4 border-2 border-primary/20"
+                            />
+                            <span className="font-semibold text-text-primary text-lg">
+                              {companyProfile.companyName}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDropdown({ name: "", logo: "" })}
+                            className="text-neutral-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <label className="block text-lg font-medium text-text-primary mb-3">
+                      Industry
+                    </label>
+                    <div className="flex justify-center">
+                      <InputField
+                        id="industry"
+                        name="industry"
+                        value={companyProfile.industry}
+                        onChange={handleChange}
+                        placeholder="e.g., Technology, Healthcare, Finance"
+                        className="w-full md:w-1/2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <label className="block text-lg font-medium text-text-primary mb-3">
+                      Company Description
+                    </label>
+                    <div className="flex justify-center">
+                      <textarea
+                        id="companyDescription"
+                        name="companyDescription"
+                        value={companyProfile.companyDescription}
+                        onChange={handleChange}
+                        placeholder="Tell us about your company, its mission, values, and what makes it unique"
+                        rows="4"
+                        className="w-full md:w-1/2 px-4 py-3 text-base border border-neutral-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-200 bg-background text-text-primary placeholder-text-secondary/60 resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <label className="block text-lg font-medium text-text-primary mb-3">
+                      Contact Number
+                    </label>
+                    <div className="flex justify-center">
+                      <InputField
+                        id="contactNumber"
+                        name="contactNumber"
+                        value={companyProfile.contactNumber}
+                        onChange={handleChange}
+                        placeholder="+91 1234567890"
+                        className="w-full md:w-1/2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-primary/5 to-primary-light/5 rounded-xl p-6 border border-primary/10">
+                <h3 className="text-2xl font-semibold text-text-primary mb-6 flex items-center justify-center">
+                  <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-text-inverse text-sm font-bold mr-3">2</span>
+                  Address
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputField
+                    label="City"
+                    id="address.city"
+                    name="address.city"
+                    value={companyProfile.address.city}
+                    onChange={handleChange}
+                    placeholder="Enter city"
+                  />
+                  <InputField
+                    label="State"
+                    id="address.state"
+                    name="address.state"
+                    value={companyProfile.address.state}
+                    onChange={handleChange}
+                    placeholder="Enter state"
+                  />
+                  <InputField
+                    label="Country"
+                    id="address.country"
+                    name="address.country"
+                    value={companyProfile.address.country}
+                    onChange={handleChange}
+                    placeholder="Enter country"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-primary/5 to-primary-light/5 rounded-xl p-6 border border-primary/10">
+                <h3 className="text-2xl font-semibold text-text-primary mb-6 flex items-center justify-center">
+                  <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-text-inverse text-sm font-bold mr-3">3</span>
+                  Company Size
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField
+                    label="Company Size From"
+                    id="companySize.from"
+                    name="companySize.from"
+                    value={companyProfile.companySize.from}
+                    onChange={handleChange}
+                    placeholder="Enter company size (from)"
+                  />
+                  <InputField
+                    label="Company Size To"
+                    id="companySize.to"
+                    name="companySize.to"
+                    value={companyProfile.companySize.to}
+                    onChange={handleChange}
+                    placeholder="Enter company size (to)"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-primary/5 to-primary-light/5 rounded-xl p-6 border border-primary/10">
+                <h3 className="text-2xl font-semibold text-text-primary mb-6 flex items-center justify-center">
+                  <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-text-inverse text-sm font-bold mr-3">4</span>
+                  Online Presence
+                </h3>
+
+                <div className="space-y-4">
+                  <InputField
+                    label="Company Website"
+                    id="companyWebsite"
+                    name="companyWebsite"
+                    value={companyProfile.companyWebsite}
+                    onChange={handleChange}
+                    placeholder="https://www.companywebsite.com"
+                  />
+                  <InputField
+                    label="LinkedIn"
+                    id="companySocialProfiles.linkedIn"
+                    name="companySocialProfiles.linkedIn"
+                    value={companyProfile.companySocialProfiles.linkedIn}
+                    onChange={handleChange}
+                    placeholder="https://www.linkedin.com/company/username"
+                  />
+                  <InputField
+                    label="Twitter"
+                    id="companySocialProfiles.twitter"
+                    name="companySocialProfiles.twitter"
+                    onChange={handleChange}
+                    placeholder="https://twitter.com/username"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pt-6">
+              <button
+                type="submit"
+                className="px-12 py-4 bg-gradient-to-r from-primary to-primary-light text-text-inverse text-xl font-semibold rounded-xl hover:from-primary-dark hover:to-primary transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 border border-primary-dark/20"
+              >
+                Create your profile
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
-};
+}
 
 export default CompanyOnboarding;

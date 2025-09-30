@@ -4,16 +4,22 @@ import { useDispatch } from 'react-redux';
 import logo from "../assets/media/hirelink.png";
 import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
 import { loginUser } from '../../services/userService';
+import { useNavigate } from "react-router-dom";
+import useUpdateUserData from "../../hooks/useUpdateUserData";
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 function Login() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const updateUser = useUpdateUserData();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const resetErrorMessage = () => {
     setTimeout(() => {
       setErrorMessage("");
@@ -37,8 +43,29 @@ function Login() {
     dispatch(loginStart());
     try {
       const response = await loginUser(userData);
-      dispatch(loginSuccess(response.data.data.user));
+      const loggedInUser = response.data.data.user;
+      dispatch(loginSuccess(loggedInUser));
       alert('Login successful!');
+      
+      // Update user data in Redux store
+      await updateUser();
+      
+      // Navigate based on user role and onboarding status
+      if (loggedInUser.role === "jobSeeker") {
+        if (loggedInUser.userProfile.doneOnboarding === true) {
+          navigate("/");
+        } else {
+          navigate("/user-onboarding");
+        }
+      } else if (loggedInUser.role === "employer") {
+        if (loggedInUser.userProfile.doneOnboarding === true) {
+          console.log("Sending to dashboard");
+          navigate("/dashboard/home");
+        } else {
+          console.log(loggedInUser);
+          navigate("/company-onboarding");
+        }
+      }
     } catch (error) {
       dispatch(loginFailure());
       setErrorMessage(error.response?.data?.message || 'Login failed.');
@@ -88,15 +115,24 @@ function Login() {
                 />
                 <label className="font-semibold text-text-primary">Password:</label>
 
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
-                  placeholder="Password"
-                />
+                <div className="relative mb-3">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="rounded h-10 pl-5 pr-12 text-base w-full border-x border-y border-neutral-400 bg-background text-text-primary"
+                    placeholder="Password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-primary hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                  </button>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-error text-sm ml-2">
                     {errorMessage}

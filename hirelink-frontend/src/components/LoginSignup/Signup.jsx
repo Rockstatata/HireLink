@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import logo from "../assets/media/hirelink.png";
 import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
-import { registerUser } from '../../services/userService';
+import { registerUser, getCurrentUser } from '../../services/userService';
+import { useNavigate } from "react-router-dom";
+import useUpdateUserData from "../../hooks/useUpdateUserData";
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 function Signup() {
   const dispatch = useDispatch();
@@ -14,9 +17,14 @@ function Signup() {
     confirmPassword: "",
   });
 
+  const navigate = useNavigate();
+  const updateUser = useUpdateUserData();
+
   const [userType, setUserType] = useState("jobSeeker");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const resetErrorMessage = () => {
     setTimeout(() => {
       setErrorMessage("");
@@ -57,10 +65,26 @@ function Signup() {
       const response = await registerUser(payload);  // Updated to send 'payload' instead of 'data'
       dispatch(loginSuccess(response.data.data.user));
       alert('Account created successfully!');
+      const currentUserResponse = await getCurrentUser();
+      const userData = currentUserResponse.data.data.user;
+      if (userData) {
+        console.log(userData);
+        if (userData.role === "jobSeeker") {
+          navigate("/user-onboarding");
+        } else {
+          navigate("/company-onboarding");
+        }
+
+        updateUser();
+      }
+       setLoading(false);
     } catch (error) {
       dispatch(loginFailure());
       setErrorMessage(error.response?.data?.message || 'Registration failed.');
       resetErrorMessage();
+    }
+    finally{
+      setLoading(false);
     }
   };
 
@@ -107,16 +131,14 @@ function Signup() {
           <div className="flex flex-col md:flex-row justify-center items-center gap-5 ">
             <div
               onClick={() => setUserType("jobSeeker")}
-              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${
-                userType === "jobSeeker" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
+              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${userType === "jobSeeker" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
                 }`}
             >
               I am a Job Seeker
             </div>
             <div
               onClick={() => setUserType("employer")}
-              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${
-                userType === "employer" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
+              className={`rounded-md px-5 py-1 cursor-pointer font-semibold text-text-secondary transition-colors ${userType === "employer" ? "bg-primary text-white" : "bg-neutral-200 hover:bg-neutral-300"
                 }`}
             >
               I am an Employer
@@ -159,26 +181,44 @@ function Signup() {
                 />
 
                 <label className=" font-semibold text-text-primary">Password:</label>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
-                  placeholder="min 8 characters"
-                />
+                <div className="relative mb-3">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="rounded h-10 pl-5 pr-12 text-base w-full border-x border-y border-neutral-400 bg-background text-text-primary"
+                    placeholder="min 8 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-primary hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                  </button>
+                </div>
 
                 <label className=" font-semibold text-text-primary">Confirm Password:</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="rounded h-10 pl-5 text-base mb-3 border-x border-y border-neutral-400 bg-background text-text-primary"
-                  placeholder="confirm password"
-                />
+                <div className="relative mb-3">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="rounded h-10 pl-5 pr-12 text-base w-full border-x border-y border-neutral-400 bg-background text-text-primary"
+                    placeholder="confirm password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-primary hover:text-primary transition-colors"
+                  >
+                    {showConfirmPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                  </button>
+                </div>
                 <span className="text-error text-sm ml-2">
                   {errorMessage}
                 </span>

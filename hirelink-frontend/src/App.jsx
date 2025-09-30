@@ -1,19 +1,28 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Navigate, useLocation } from "react-router-dom";
 import AllRoutes from "./Routes/AllRoutes";
-import LoginSignUp from './Pages/LoginSignUp'
-import CompanyOnboarding from './components/LoginSignup/CompanyOnboarding'
-import UserOnboarding from './components/LoginSignup/UserOnboarding'
 import Navbar from './components/Navbar'
+import { useSelector } from "react-redux";
+import useUpdateUserData from "./hooks/useUpdateUserData";
+import { useEffect } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { userData } = useSelector((store) => store.auth);
+
+  const location = useLocation();
+  const hideOnRoutes = ["/login", "/signup"];
+  const updateUser = useUpdateUserData();
+
+  useEffect(() => {
+    updateUser();
+  }, []);
 
   return (
     <>
       <div>
+        {!(
+          location.pathname.startsWith("/dashboard") ||
+          hideOnRoutes.includes(location.pathname)
+        ) && <Navbar />}
         <AllRoutes />
       </div>
     </>

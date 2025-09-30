@@ -10,6 +10,10 @@ const userSchema = new Schema(
     email: { type: String, required: true, unique: true },
     role: { type: String, required: true },
     refreshToken: String,
+    // Keep userProfile for backward compatibility, but also add profile references
+    userProfile: { type: Schema.Types.Mixed },
+    jobSeekerProfile: { type: Schema.Types.ObjectId, ref: "JobSeekerProfile" },
+    companyProfile: { type: Schema.Types.ObjectId, ref: "CompanyProfile" },
   },
   {
     timestamps: true,

@@ -1,5 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { JobSeekerProfile } from "../models/jobSeekerProfile.model.js";
+import { CompanyProfile } from "../models/companyProfile.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -59,9 +61,15 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
 
+  const { refreshToken, accessToken } = await generateAccessAndRefereshTokens(
+    createdUser._id
+  );
+
   return res
     .status(201)
-    .json(new ApiResponse(201, { user: createdUser }, "User registered successfully")); // Updated to return 'user' object
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(new ApiResponse(201, { user: createdUser, accessToken, refreshToken }, "User registered successfully")); // Updated to return 'user' object
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -91,6 +99,8 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
   return res
     .status(200)
     .cookie("accessToken", accessToken, cookieOptions)
@@ -98,7 +108,7 @@ const loginUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { accessToken, refreshToken },
+        { user: loggedInUser, accessToken, refreshToken },
         "User login successful"
       )
     );
@@ -124,4 +134,110 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged out"));
 });
 
-export { registerUser, loginUser, logoutUser };
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+    .select("-password -refreshToken")
+    .populate('jobSeekerProfile')
+    .populate('companyProfile');
+
+  return res.status(200).json(new ApiResponse(200, { user }, "Current user fetched successfully"));
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const updateData = req.body;
+
+  // Get the user to check their role
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  let profileId = null;
+
+  // Create appropriate profile document based on user role
+  if (user.role === "jobSeeker") {
+    // Create or update JobSeekerProfile
+    const jobSeekerData = {
+      ...updateData,
+      name: user.name, // Add user name to profile
+      // Ensure workExperience has the right structure
+      workExperience: updateData.workExperience?.map(exp => ({
+        jobTitle: exp.jobTitle || "",
+        company: {
+          name: exp.company?.name || "",
+          logoUrl: exp.company?.logoUrl || "",
+          domain: exp.company?.domain || "",
+        },
+        currentJob: !updateData.notEmployed, // Set currentJob based on employment status
+      })) || [],
+    };
+
+    let jobSeekerProfile;
+    if (user.jobSeekerProfile) {
+      // Update existing profile
+      jobSeekerProfile = await JobSeekerProfile.findByIdAndUpdate(
+        user.jobSeekerProfile,
+        jobSeekerData,
+        { new: true }
+      );
+    } else {
+      // Create new profile
+      jobSeekerProfile = await JobSeekerProfile.create(jobSeekerData);
+      profileId = jobSeekerProfile._id;
+    }
+  } else if (user.role === "employer") {
+    // Create or update CompanyProfile
+    const companyData = {
+      ...updateData,
+      // Ensure companySize has proper number types
+      companySize: {
+        from: parseInt(updateData.companySize?.from) || 0,
+        to: parseInt(updateData.companySize?.to) || 0,
+      },
+      // Ensure companySocialProfiles is properly structured
+      companySocialProfiles: updateData.companySocialProfiles || {},
+    };
+
+    let companyProfile;
+    if (user.companyProfile) {
+      // Update existing profile
+      companyProfile = await CompanyProfile.findByIdAndUpdate(
+        user.companyProfile,
+        companyData,
+        { new: true }
+      );
+    } else {
+      // Create new profile
+      companyProfile = await CompanyProfile.create(companyData);
+      profileId = companyProfile._id;
+    }
+  }
+
+  // Update user with profile reference and keep userProfile for backward compatibility
+  const updateFields = {
+    userProfile: updateData, // Keep for backward compatibility
+  };
+
+  if (profileId) {
+    if (user.role === "jobSeeker") {
+      updateFields.jobSeekerProfile = profileId;
+    } else if (user.role === "employer") {
+      updateFields.companyProfile = profileId;
+    }
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    updateFields,
+    { new: true }
+  ).select("-password -refreshToken").populate('jobSeekerProfile').populate('companyProfile');
+
+  if (!updatedUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, { user: updatedUser }, "User profile updated successfully"));
+});
+
+export { registerUser, loginUser, logoutUser, getCurrentUser, updateUserProfile };
