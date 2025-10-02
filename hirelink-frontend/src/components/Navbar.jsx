@@ -10,20 +10,21 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-primary to-primary-light shadow-xl border-b border-primary-dark">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center font-poppins bg-text-inverse/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-primary-light/30 transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                <img
-                  src={logo}
-                  className="w-16 h-auto rounded-md"
-                  alt="HireLink Logo"
-                />
-              </Link>
-            </div>
+    <nav className="bg-gradient-to-r from-primary to-primary-light shadow-xl border-b border-primary-dark fixed top-0 left-0 right-0 z-50">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo - Left Side */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center font-poppins bg-text-inverse/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-primary-light/30 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <img
+                src={logo}
+                className="w-16 h-auto rounded-md"
+                alt="HireLink Logo"
+              />
+            </Link>
           </div>
+          
+          {/* Navigation - Right Side */}
           <div className="flex items-center">
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
@@ -59,7 +60,9 @@ const Navbar = () => {
                 </Link>
               </div>
             </div>
-            <div className="-mr-2 flex md:hidden">
+            
+            {/* Mobile menu button */}
+            <div className="ml-4 md:hidden">
               <button
                 onClick={toggleMenu}
                 className="bg-primary inline-flex items-center justify-center p-2 rounded-md text-text-inverse hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary focus:ring-text-inverse transition duration-300"

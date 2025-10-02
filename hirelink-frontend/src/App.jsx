@@ -4,7 +4,7 @@ import Navbar from './components/Navbar'
 import { useSelector } from "react-redux";
 import useUpdateUserData from "./hooks/useUpdateUserData";
 import { useEffect } from "react";
-
+import JobListing from "./Pages/JobListing";
 function App() {
   const { userData } = useSelector((store) => store.auth);
 
@@ -19,11 +19,12 @@ function App() {
   return (
     <>
       <div>
-        {!(
+        {/* {!(
           location.pathname.startsWith("/dashboard") ||
           hideOnRoutes.includes(location.pathname)
         ) && <Navbar />}
-        <AllRoutes />
+        <AllRoutes /> */}
+        <JobListing />
       </div>
     </>
   )
