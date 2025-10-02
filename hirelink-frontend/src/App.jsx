@@ -19,12 +19,11 @@ function App() {
   return (
     <>
       <div>
-        {/* {!(
+        {!(
           location.pathname.startsWith("/dashboard") ||
           hideOnRoutes.includes(location.pathname)
         ) && <Navbar />}
-        <AllRoutes /> */}
-        <JobListing />
+        <AllRoutes />
       </div>
     </>
   )
