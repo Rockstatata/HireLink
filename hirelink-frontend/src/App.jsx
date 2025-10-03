@@ -17,6 +17,11 @@ function App() {
     updateUser();
   }, []);
 
+  // For development: Direct dashboard access without login
+  if (location.pathname.startsWith("/dashboard")) {
+    return <CompanyDashboard />;
+  }
+
   return (
     <>
       <div>
