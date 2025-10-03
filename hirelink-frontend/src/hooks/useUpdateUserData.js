@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux';
-import { getCurrentUser } from '../services/userService';
+import { userService } from '../services/userService';
 import { updateUser } from '../store/authSlice';
 
 const useUpdateUserData = () => {
@@ -7,7 +7,7 @@ const useUpdateUserData = () => {
 
   const updateUserData = async () => {
     try {
-      const response = await getCurrentUser();
+      const response = await userService.getCurrentUser();
       dispatch(updateUser(response.data.data.user));
     } catch (error) {
       console.error('Failed to update user data', error);

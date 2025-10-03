@@ -11,9 +11,12 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.1",
+    "@heroicons/react": "^2.2.0",
+    "@iconify/react": "^4.1.1",
     "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/vite": "^4.1.13",
-    "@iconify/react": "^4.1.1",
+    "@tinymce/tinymce-react": "^6.3.0",
+    "@tremor/react": "^3.18.7",
     "axios": "^1.12.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
