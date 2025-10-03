@@ -6,6 +6,7 @@ import Signup from "../components/LoginSignup/Signup";
 import UserOnboarding from "../components/LoginSignup/UserOnboarding";
 import CompanyOnboarding from "../components/LoginSignup/CompanyOnboarding";
 import Dashboard from "../Pages/Dashboard";
+import CompanyDashboard from "../Pages/CompanyDashboard";
 import PrivateRoutes from "./PrivateRoutes";
 
 
@@ -20,6 +21,7 @@ function AllRoutes() {
       <Route path="/user-onboarding" element={<PrivateRoutes><UserOnboarding /></PrivateRoutes>} />
       <Route path="/company-onboarding" element={<PrivateRoutes><CompanyOnboarding /></PrivateRoutes>} />
       <Route path="/dashboard/home" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
+      <Route path="/dashboard/*" element={<PrivateRoutes><CompanyDashboard /></PrivateRoutes>} />
 
     </Routes>
   );

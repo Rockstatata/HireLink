@@ -3,8 +3,9 @@ import AllRoutes from "./Routes/AllRoutes";
 import Navbar from './components/Navbar'
 import { useSelector } from "react-redux";
 import useUpdateUserData from "./hooks/useUpdateUserData";
-import { useEffect } from "react";
-import JobListing from "./Pages/JobListing";
+import { useEffect } from "react"; 
+import CompanyDashboard from "./Pages/CompanyDashboard";
+
 function App() {
   const { userData } = useSelector((store) => store.auth);
 
