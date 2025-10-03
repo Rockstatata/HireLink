@@ -18,9 +18,9 @@ function App() {
   }, []);
 
   // For development: Direct dashboard access without login
-  if (location.pathname.startsWith("/dashboard")) {
-    return <CompanyDashboard />;
-  }
+  // if (location.pathname.startsWith("/dashboard")) {
+  //   return <CompanyDashboard />;
+  // }
 
   return (
     <>
