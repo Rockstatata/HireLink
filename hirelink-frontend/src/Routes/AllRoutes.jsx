@@ -29,9 +29,6 @@ function AllRoutes() {
 
       <Route path="/user-onboarding" element={<PrivateRoutes><UserOnboarding /></PrivateRoutes>} />
       <Route path="/company-onboarding" element={<PrivateRoutes><CompanyOnboarding /></PrivateRoutes>} />
-<<<<<<< Updated upstream
-      <Route path="/dashboard/home" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
-=======
       
       {/* Job Seeker Dashboard Routes */}
       <Route path="/my-dashboard" element={<PrivateRoutes><JobSeekerDashboard /></PrivateRoutes>} />
@@ -68,7 +65,6 @@ function AllRoutes() {
         } 
       />
 
->>>>>>> Stashed changes
 
     </Routes>
   );

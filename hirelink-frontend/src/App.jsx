@@ -3,13 +3,9 @@ import AllRoutes from "./Routes/AllRoutes";
 import Navbar from './components/Navbar'
 import { useSelector, useDispatch } from "react-redux";
 import useUpdateUserData from "./hooks/useUpdateUserData";
-<<<<<<< Updated upstream
-import { useEffect } from "react";
-=======
 import { useEffect, useState } from "react"; 
 import CompanyDashboard from "./Pages/CompanyDashboard";
 import { setLoadingFalse } from "./store/authSlice";
->>>>>>> Stashed changes
 
 function App() {
   const { userData, loading } = useSelector((store) => store.auth);
@@ -34,8 +30,6 @@ function App() {
     initializeAuth();
   }, []);
 
-<<<<<<< Updated upstream
-=======
   // Show loading spinner during initial app load
   if (initialLoad || loading) {
     return (
@@ -45,7 +39,6 @@ function App() {
     );
   }
 
->>>>>>> Stashed changes
   return (
     <>
       <div>

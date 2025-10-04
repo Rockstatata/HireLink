@@ -12,9 +12,6 @@ export const loginUser = (data) => apiCall.post('/users/login', data);
 export const registerUser = (data) => apiCall.post('/users/signup', data);
 export const logoutUser = () => apiCall.post('/users/logout');
 export const getCurrentUser = () => apiCall.get('/users/current-user');
-<<<<<<< Updated upstream
-export const updateUserProfile = (data) => apiCall.put('/users/update-profile', data);
-=======
 export const updateUserProfile = (data) => apiCall.put('/users/update-profile', data);
 
 // Enhanced userService object with all methods
@@ -106,4 +103,3 @@ async function getMyApplications() {
   const response = await apiCall.get("/users/my-applications");
   return response.data;
 }
->>>>>>> Stashed changes
