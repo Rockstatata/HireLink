@@ -13,6 +13,10 @@
     "@fortawesome/fontawesome-free": "^7.0.1",
     "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/vite": "^4.1.13",
+<<<<<<< Updated upstream
+=======
+    "@tremor/react": "^3.18.7",
+>>>>>>> Stashed changes
     "axios": "^1.12.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
