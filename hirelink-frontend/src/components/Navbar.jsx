@@ -1,12 +1,34 @@
 import React, { useState } from 'react';
 import logo from "./assets/media/hirelink.png";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../store/authSlice';
+import { userService } from '../services/userService';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const { userData } = useSelector((store) => store.auth);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    userService
+      .logout()
+      .then(() => {
+        dispatch(logout());
+        navigate('/', { replace: true });
+      })
+      .catch((error) => {
+        console.log(error);
+        // Even if logout API fails, clear local state
+        dispatch(logout());
+        navigate('/', { replace: true });
+      });
   };
 
   return (
@@ -46,18 +68,61 @@ const Navbar = () => {
                 >
                   Companies
                 </a>
-                <Link
-                  to="/login"
-                  className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  className="bg-text-inverse text-primary hover:bg-neutral-100 hover:text-primary-dark px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 shadow-md"
-                >
-                  Sign Up
-                </Link>
+                {userData ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      className="flex items-center text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mr-2">
+                        {userData.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      {userData.name}
+                      <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        <Link
+                          to={userData.role === 'employer' ? '/dashboard/home' : '/jobseeker/profile'}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowProfileDropdown(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowProfileDropdown(false)}
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          onClick={() => {handleLogout(); setShowProfileDropdown(false);}}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="bg-text-inverse text-primary hover:bg-neutral-100 hover:text-primary-dark px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 shadow-md"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             
@@ -113,18 +178,43 @@ const Navbar = () => {
           >
             Companies
           </a>
-          <Link
-            to="/login"
-            className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
-          >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="bg-text-inverse text-primary hover:bg-neutral-100 hover:text-primary-dark block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105 shadow-md"
-          >
-            Sign Up
-          </Link>
+          {userData ? (
+            <>
+              <Link
+                to={userData.role === 'employer' ? '/dashboard/home' : '/jobseeker/profile'}
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/profile"
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105 w-full text-left"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-text-inverse text-primary hover:bg-neutral-100 hover:text-primary-dark block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105 shadow-md"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

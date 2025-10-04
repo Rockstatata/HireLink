@@ -4,18 +4,22 @@ import SideBarFilter from "./SideBarFilter";
 import JobCard from "./JobCard";
 import { useEffect } from "react";
 import { contentService } from "../../services/contentService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function MainJobSection() {
+  const [searchParams] = useSearchParams();
+  const companyFilter = searchParams.get('company');
+  
   const [filters, setFilters] = useState({
     datePosted: "",
     jobTypes: [],
-    experience: 30,
+    experience: "",
     salaryRange: {
-      from: 0,
-      to: 10000000000,
+      from: "",
+      to: "",
     },
     workMode: [],
+    company: companyFilter || "",
   });
 
   const [jobs, setJobs] = useState([]);
@@ -28,11 +32,16 @@ function MainJobSection() {
     setLoading(true);
     try {
       const res = await contentService.getJobs(filters);
-      if (res) {
-        setJobs(res.jobs);
+      console.log('Jobs API response:', res);
+      if (res && res.jobs) {
+        setJobs(Array.isArray(res.jobs) ? res.jobs : []);
+      } else {
+        console.warn('Unexpected response structure:', res);
+        setJobs([]);
       }
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching jobs:', error);
+      setJobs([]);
     }
     setLoading(false);
   };
@@ -47,7 +56,7 @@ function MainJobSection() {
   }, [filters, search, selectedLocation]);
 
   const redirectToDetail = (id) => {
-    navigate(`/job/${id}`);
+    navigate(`/jobs/${id}`);
   };
 
   return (
@@ -71,13 +80,23 @@ function MainJobSection() {
             <span>{jobs.length} Jobs results</span>
           </div>
           <div>
-            {jobs.map((job) => (
-              <JobCard
-                key={job._id}
-                job={job}
-                redirectToDetail={redirectToDetail}
-              />
-            ))}
+            {loading ? (
+              <div className="flex justify-center items-center p-8">
+                <div className="text-lg text-gray-600">Loading jobs...</div>
+              </div>
+            ) : jobs.length > 0 ? (
+              jobs.map((job) => (
+                <JobCard
+                  key={job._id}
+                  job={job}
+                  redirectToDetail={redirectToDetail}
+                />
+              ))
+            ) : (
+              <div className="flex justify-center items-center p-8">
+                <div className="text-lg text-gray-600">No jobs found</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

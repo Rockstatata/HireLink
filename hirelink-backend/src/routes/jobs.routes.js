@@ -1,0 +1,50 @@
+import { Router } from "express";
+import {
+  ping,
+  authPing,
+  createJob,
+  getJobs,
+  getJobById,
+  getMyJobs,
+  postJob,
+  sendJobDescription,
+  applyForJob,
+  saveJob,
+  getSavedJobs,
+  removeSavedJob,
+  getJobLocations,
+  getCompanies,
+  getJobApplications,
+  getMyApplications,
+  getMyCompanyApplications,
+} from "../controllers/job.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+
+const router = Router();
+
+// Public routes
+router.route("/ping").get(ping);
+router.route("/jobs").get(getJobs);
+router.route("/jobs/:id").get(getJobById);
+router.route("/job-locations").get(getJobLocations);
+router.route("/companies").get(getCompanies);
+
+// Protected routes (require authentication)
+router.route("/auth-ping").get(verifyJWT, authPing);
+
+// Employer routes
+router.route("/jobs").post(verifyJWT, createJob);
+router.route("/post-job").post(verifyJWT, postJob); // Legacy route for compatibility
+router.route("/my-jobs").get(verifyJWT, getMyJobs);
+router.route("/my-company-applications").get(verifyJWT, getMyCompanyApplications);
+router.route("/generate-job-description").post(verifyJWT, sendJobDescription);
+router.route("/jobs/:id/applications").get(verifyJWT, getJobApplications);
+
+// Job seeker routes
+router.route("/apply/:id").post(verifyJWT, applyForJob);
+router.route("/save/:id").post(verifyJWT, saveJob);
+router.route("/remove-saved-job/:id").post(verifyJWT, removeSavedJob);
+router.route("/saved-jobs").get(verifyJWT, getSavedJobs);
+router.route("/my-applications").get(verifyJWT, getMyApplications);
+
+export default router;

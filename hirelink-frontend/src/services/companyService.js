@@ -1,10 +1,10 @@
-import apiClient from "./apiBase";
+import { apiCall } from "./apiBase";
 
 export const companyService = {
   postNewJob,
   getAllJobListings,
-  getNonActiveJobListings,
   getCompanyJobListings,
+  getMyJobs,
   generateJobDescription,
   getActiveJobListings,
   getNonActiveJobListings,
@@ -13,48 +13,79 @@ export const companyService = {
   shortlistCandidate,
   removeApplication,
   removeFromShortlist,
+  getJobApplications,
+  applyForJob,
+  saveJob,
+  removeSavedJob,
 };
 
+async function getMyJobs() {
+  return apiCall("get", "/jobs/my-jobs");
+}
+
 async function getAllJobListings() {
-  return apiCall("get", "/company/listings");
+  return apiCall("get", "/jobs/my-jobs");
 }
 
 async function getAllApplications() {
-  return apiCall("get", "/company/applications");
+  return apiCall("get", "/jobs/my-company-applications");
 }
 
 async function postNewJob(data) {
-  return apiCall("post", "/jobs", data);
+  return apiCall("post", "/jobs/jobs", data);
 }
 
 async function generateJobDescription(data) {
-  return apiCall("post", "/generate-job-description", data);
+  return apiCall("post", "/jobs/generate-job-description", data);
 }
 
 async function getCompanyJobListings() {
-  return apiCall("get", "/company/listings");
+  return apiCall("get", "/jobs/my-jobs");
 }
 
 async function getActiveJobListings() {
-  return apiCall("get", "/company/active-listings");
+  return apiCall("get", "/jobs/my-jobs", { params: { status: 'active' } });
 }
 
 async function getNonActiveJobListings() {
-  return apiCall("get", "/company/non-active-listings");
+  return apiCall("get", "/jobs/my-jobs", { params: { status: 'inactive' } });
 }
 
 async function getShortListedCandidates() {
+  // This would need to be implemented in backend
   return apiCall("get", "/company/shortlisted-candidates");
 }
 
 async function shortlistCandidate(data) {
+  // This would need to be implemented in backend
   return apiCall("post", "/company/shortlist-candidate", data);
 }
 
 async function removeApplication(data) {
+  // This would need to be implemented in backend
   return apiCall("post", "/company/remove-from-applications", data);
 }
 
 async function removeFromShortlist(data) {
+  // This would need to be implemented in backend
   return apiCall("post", "/company/remove-from-shortlisted", data);
+}
+
+// Add new functions for job applications
+async function getJobApplications(jobId, page = 1, limit = 10, status = 'all') {
+  return apiCall("get", `/jobs/jobs/${jobId}/applications`, { 
+    params: { page, limit, status } 
+  });
+}
+
+async function applyForJob(jobId, applicationData = {}) {
+  return apiCall("post", `/jobs/apply/${jobId}`, applicationData);
+}
+
+async function saveJob(jobId) {
+  return apiCall("post", `/jobs/save/${jobId}`);
+}
+
+async function removeSavedJob(jobId) {
+  return apiCall("post", `/jobs/remove-saved-job/${jobId}`);
 }

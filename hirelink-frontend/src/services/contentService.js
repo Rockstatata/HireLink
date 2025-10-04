@@ -9,30 +9,36 @@ export const contentService = {
 };
 async function getJobs(filters) {
   let params = new URLSearchParams();
-  params.append("search", filters.search);
-  params.append("datePosted", filters.datePosted);
-  params.append("experience", filters.experience);
-  params.append("salaryFrom", filters.salaryRange.from);
-  params.append("salaryTo", filters.salaryRange.to);
-  params.append("location", filters.location);
-  filters.jobTypes.forEach((jobType) => params.append("type", jobType));
-  filters.workMode.forEach((workMode) => params.append("workMode", workMode));
+  if (filters.search) params.append("search", filters.search);
+  if (filters.datePosted) params.append("datePosted", filters.datePosted);
+  if (filters.experience && filters.experience !== "") params.append("experience", filters.experience);
+  if (filters.salaryRange?.from && filters.salaryRange.from !== "") params.append("minSalary", filters.salaryRange.from);
+  if (filters.salaryRange?.to && filters.salaryRange.to !== "") params.append("maxSalary", filters.salaryRange.to);
+  if (filters.location) params.append("location", filters.location);
+  if (filters.company) params.append("company", filters.company);
+  if (filters.jobTypes && filters.jobTypes.length > 0) {
+    filters.jobTypes.forEach((jobType) => params.append("jobType", jobType));
+  }
+  if (filters.workMode && filters.workMode.length > 0) {
+    filters.workMode.forEach((workMode) => params.append("workMode", workMode));
+  }
 
-  return apiCall("get", "/jobs", { params: params });
+  console.log('API call params:', params.toString());
+  return apiCall("get", "/jobs/jobs", { params: params });
 }
 
 async function getSingleJob(id) {
-  return apiCall("get", `/jobs/${id}`);
+  return apiCall("get", `/jobs/jobs/${id}`);
 }
 
 async function getJobLocations(location) {
-  return apiCall("get", "/job-locations", { params: { search: location } });
+  return apiCall("get", "/jobs/job-locations", { params: { search: location } });
 }
 
 async function getCompanies() {
-  return apiCall("get", "/companies");
+  return apiCall("get", "/jobs/companies");
 }
 
 async function getSavedJobs() {
-  return apiCall("get", "/users/saved-jobs");
+  return apiCall("get", "/jobs/saved-jobs");
 }

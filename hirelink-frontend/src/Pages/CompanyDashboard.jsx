@@ -5,25 +5,26 @@ import Dashboard from "../components/CompanyDashboard/Dashboard";
 import Applications from "../components/CompanyDashboard/Applications";
 import Shortlisted from "../components/CompanyDashboard/Shortlisted";
 import JobPosting from "./JobPosting";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 
 function CompanyDashboard() {
-  const { status, userData } = useSelector((store) => store.auth);
+  // const { userData } = useSelector((store) => store.auth);
   // Temporarily disabled for design viewing
   // if (userData.role !== "employer") {
   //   return <Navigate to="/" />;
   // }
   return (
-    <div className="flex">
+    <div className="flex pt-16">
       <aside className="max-w-[64px] xl:w-full xl:max-w-[280px]">
         <DashboardSidebar />
       </aside>
       <div className="flex-1 overflow-auto">
         <Routes>
-          <Route path="/home" element={<Dashboard />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/shortedlisted" element={<Shortlisted />} />
-          <Route path="/post-job" element={<JobPosting />} />
+          <Route path="home" element={<Dashboard />} />
+          <Route path="applications" element={<Applications />} />
+          <Route path="shortlisted" element={<Shortlisted />} />
+          <Route path="post-job" element={<JobPosting />} />
+          <Route path="" element={<Dashboard />} />
         </Routes>
       </div>
     </div>

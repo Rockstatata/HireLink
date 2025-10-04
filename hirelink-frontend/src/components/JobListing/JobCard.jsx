@@ -4,16 +4,23 @@ import Dot from "../Dot";
 function JobCard({ job, redirectToDetail }) {
   const {
     title,
-    salaryRange,
+    salary,
     location,
-    type,
-    responsibilities,
-    employer,
+    jobType,
+    responsibilities = [],
+    company,
     _id,
+    createdAt,
   } = job;
-  const { companyLogo, companyName } = employer.userProfile;
 
-  const datePosted = new Date(job.datePosted);
+  // Handle both old and new data structure
+  const companyLogo = company?.companyLogo || job.employer?.userProfile?.companyLogo;
+  const companyName = company?.companyName || job.employer?.userProfile?.companyName;
+  const salaryRange = salary || job.salaryRange;
+  const type = jobType || job.type;
+  const rawDatePosted = createdAt || job.datePosted;
+
+  const datePosted = new Date(rawDatePosted);
 
   const now = new Date();
 
@@ -92,7 +99,7 @@ function JobCard({ job, redirectToDetail }) {
                   <Dot />
                   <div className="strippend">
                     <span className="text-text-secondary">
-                      ₹ {salaryRange.from}-₹ {salaryRange.to} INR
+                      {salaryRange?.currency || '₹'} {salaryRange?.min || salaryRange?.from || 0}-{salaryRange?.currency || '₹'} {salaryRange?.max || salaryRange?.to || 0} {salaryRange?.currency === 'USD' ? 'USD' : salaryRange?.currency === 'EUR' ? 'EUR' : 'INR'}
                     </span>
                   </div>
                 </div>
@@ -115,8 +122,14 @@ function JobCard({ job, redirectToDetail }) {
         {/* Bottom */}
         <div className="ml-5 md:ml-10 text-text-secondary text-[.9rem]">
           <ul className="list-disc">
-            <li>{responsibilities[0]}</li>
-            <li>{responsibilities[1]}</li>
+            {responsibilities.length > 0 ? (
+              <>
+                <li>{responsibilities[0]}</li>
+                {responsibilities[1] && <li>{responsibilities[1]}</li>}
+              </>
+            ) : (
+              <li>Click to view job details</li>
+            )}
           </ul>
         </div>
       </div>

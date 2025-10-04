@@ -29,6 +29,8 @@ export const userService = {
   applyForJob,
   removeSavedJob,
   getPublicProfile,
+  getSavedJobs,
+  getMyApplications,
 };
 
 async function login(userData) {
@@ -89,5 +91,15 @@ async function removeSavedJob(jobId) {
 
 async function getPublicProfile(id) {
   const response = await apiCall.get(`/users/public-profile/${id}`);
+  return response.data;
+}
+
+async function getSavedJobs() {
+  const response = await apiCall.get("/users/saved-jobs");
+  return response.data;
+}
+
+async function getMyApplications() {
+  const response = await apiCall.get("/users/my-applications");
   return response.data;
 }

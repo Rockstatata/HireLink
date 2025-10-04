@@ -25,11 +25,16 @@ function Applications() {
     try {
       const res = await companyService.getAllApplications();
       console.log("Called again");
-      setApplicants(res);
+      // Handle the new response structure: { applications, pagination }
+      const applications = res?.applications || [];
+      setApplicants(Array.isArray(applications) ? applications : []);
     } catch (error) {
       console.log(error);
+      setApplicants([]);
     }
-    setLoading(false);
+    finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -41,7 +46,7 @@ function Applications() {
   }
 
   return (
-    <div className="py-3 px-2 md:px-8 lg:px-20 ">
+    <div className="py-3 px-2 md:px-8 lg:px-20 pt-20">
       <div className="font-medium text-2xl my-5 flex flex-col md:flex-row gap-3 justify-between md:items-center ml-5 md:ml-0">
         <span>Applications</span>
         <div className="flex items-center gap-3">
@@ -54,7 +59,7 @@ function Applications() {
         </div>
       </div>
       <div className="border rounded p-1.5 md:p-5 flex flex-col gap-5">
-        {applicants.length > 0 ? (
+        {Array.isArray(applicants) && applicants.length > 0 ? (
           applicants.map((applicant, index) => (
             <ApplicantsCard
               key={index}
@@ -63,7 +68,9 @@ function Applications() {
             />
           ))
         ) : (
-          <p className="text-center w font-medium">No applicants found.</p>
+          <p className="text-center w font-medium">
+            {loading ? "Loading applications..." : "No applicants found."}
+          </p>
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import { JobSeekerProfile } from "../models/jobSeekerProfile.model.js";
 import { CompanyProfile } from "../models/companyProfile.model.js";
+import { Job } from "../models/job.model.js";
+import { Application } from "../models/application.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -147,11 +149,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const updateData = req.body;
 
+  console.log('Update user profile request for userId:', userId);
+  console.log('Request body:', JSON.stringify(updateData, null, 2));
+
   // Get the user to check their role
   const user = await User.findById(userId);
   if (!user) {
     throw new ApiError(404, "User not found");
   }
+
+  console.log('User role:', user.role);
 
   let profileId = null;
 
@@ -240,4 +247,41 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, { user: updatedUser }, "User profile updated successfully"));
 });
 
-export { registerUser, loginUser, logoutUser, getCurrentUser, updateUserProfile };
+const getSavedJobs = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  // Get the job seeker profile and populate saved jobs
+  const jobSeekerProfile = await JobSeekerProfile.findOne({ user: userId })
+    .populate('savedJobs');
+  
+  if (!jobSeekerProfile) {
+    return res.status(200).json(new ApiResponse(200, [], "No saved jobs found"));
+  }
+  
+  return res.status(200).json(
+    new ApiResponse(200, jobSeekerProfile.savedJobs || [], "Saved jobs fetched successfully")
+  );
+});
+
+const getMyApplications = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  // Get all applications by this user
+  const applications = await Application.find({ applicant: userId })
+    .populate('job')
+    .sort({ createdAt: -1 });
+  
+  return res.status(200).json(
+    new ApiResponse(200, applications, "Applications fetched successfully")
+  );
+});
+
+export { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  getCurrentUser, 
+  updateUserProfile,
+  getSavedJobs,
+  getMyApplications
+};

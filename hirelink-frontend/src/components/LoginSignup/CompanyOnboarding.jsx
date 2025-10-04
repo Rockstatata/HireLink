@@ -53,17 +53,26 @@ function CompanyOnboarding() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!companyProfile.companyName || companyProfile.companyName.trim() === "") {
+      alert("Please enter a company name");
+      return;
+    }
+    
     updateData({ ...companyProfile, doneOnboarding: true });
   };
 
   const updateData = async (data) => {
+    console.log('Submitting company profile data:', data);
     try {
       const res = await updateUserProfile(data);
       if (res.status === 200) {
         navigate("/dashboard/home");
       }
     } catch (error) {
-      console.log(error);
+      console.log('Company onboarding error:', error);
+      console.log('Error response:', error.response?.data);
     }
   };
 
@@ -116,10 +125,24 @@ function CompanyOnboarding() {
                     </label>
                     <div className="flex justify-center">
                       {showDropdown ? (
-                        <CompanySearch
-                          handleDropdown={handleDropdown}
-                          width="w-full md:w-1/2"
-                        />
+                        <div className="w-full md:w-1/2 space-y-3">
+                          <CompanySearch
+                            handleDropdown={handleDropdown}
+                            width="w-full"
+                          />
+                          <div className="text-center">
+                            <span className="text-sm text-gray-500">or</span>
+                          </div>
+                          <InputField
+                            label="Enter Company Name Manually"
+                            id="companyName"
+                            name="companyName"
+                            value={companyProfile.companyName}
+                            onChange={handleChange}
+                            placeholder="Enter your company name"
+                            className="w-full"
+                          />
+                        </div>
                       ) : (
                         <div className="flex justify-between items-center p-4 bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-lg border border-neutral-200 shadow-sm max-w-md">
                           <div className="flex items-center">

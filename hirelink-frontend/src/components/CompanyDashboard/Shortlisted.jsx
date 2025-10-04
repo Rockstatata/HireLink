@@ -25,11 +25,16 @@ function Shortlisted() {
     setLoading(true);
     try {
       const res = await companyService.getShortListedCandidates();
-      setShortlistedCandidates(res);
+      // Handle response structure and ensure it's an array
+      const candidates = res?.docs || res || [];
+      setShortlistedCandidates(Array.isArray(candidates) ? candidates : []);
     } catch (error) {
       console.log(error);
+      setShortlistedCandidates([]);
     }
-    setLoading(false);
+    finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -41,7 +46,7 @@ function Shortlisted() {
   }
 
   return (
-    <div className="py-3 px-2 md:px-8 lg:px-20 ">
+    <div className="py-3 px-2 md:px-8 lg:px-20 pt-20">
       <div className="font-medium text-2xl my-5 flex flex-col md:flex-row gap-3 justify-between md:items-center ml-5 md:ml-0">
         <span>Shortlisted Candidates</span>
         <div className="flex items-center gap-3">
@@ -54,7 +59,7 @@ function Shortlisted() {
         </div>
       </div>
       <div className="border rounded p-1.5 md:p-5 flex flex-col gap-5">
-        {shortlistedCandidates.length > 0 ? (
+        {Array.isArray(shortlistedCandidates) && shortlistedCandidates.length > 0 ? (
           shortlistedCandidates.map((applicant, index) => (
             <ApplicantsCard
               key={index}
@@ -65,7 +70,7 @@ function Shortlisted() {
           ))
         ) : (
           <p className="text-center font-medium">
-            No shortlisted candidates found.
+            {loading ? "Loading shortlisted candidates..." : "No shortlisted candidates found."}
           </p>
         )}
       </div>

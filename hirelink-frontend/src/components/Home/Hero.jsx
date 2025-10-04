@@ -38,16 +38,7 @@ function Hero() {
               </button>
             }
           </Link>
-          <p 
-            className="underline font-semibold transition-colors duration-200 hover:scale-105"
-            style={{
-              color: isHovered ? '#9E0A57' : '#212121'
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <a href="#">Download App</a>
-          </p>
+         
         </div>
         <div className="mt-24 flex gap-8 items-center md:items-end justify-center md:justify-normal md:pl-20 pl-14 pb-9 md:pb-0 px-5 md:px-0 md:pt-5">
           <div 

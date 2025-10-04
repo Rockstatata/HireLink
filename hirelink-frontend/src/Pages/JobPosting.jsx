@@ -7,15 +7,12 @@ import SubmissionButton from "../components/Common/Buttons/SubmissionButton";
 import RadioButton from "../components/Common/FormComponents/RadioButton";
 import SkillsSearch from "../components/Common/SkillsSearch";
 import TextEditor from "../components/Common/FormComponents/TextEditor";
-import { useSelector } from "react-redux";
 import Dialogbox from "../components/Dialogbox";
 import { useNavigate } from "react-router-dom";
 import { companyService } from "../services/companyService";
 
 function JobPosting() {
   const [selectedSkills, setSelectedSkills] = useState(new Map());
-  const [value, setValue] = useState("");
-  const { userData } = useSelector((store) => store.auth);
   const [generatingDescription, setGeneratingDescription] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -25,21 +22,25 @@ function JobPosting() {
     requirements: [],
     skills: [],
     education: "",
-    experience: "0",
-    salaryRange: {
-      from: 0,
-      to: 0,
+    experience: {
+      min: 0,
+      max: 5
     },
-    type: "Full-time",
+    salary: {
+      min: 0,
+      max: 0,
+      currency: "INR",
+      negotiable: false
+    },
+    jobType: "full-time",
     location: "",
-    employer: "",
     benefits: [],
     applicationDeadline: "",
-    workMode: "",
+    workMode: "onsite",
+    category: "",
     additionalRequirements: [],
     urgent: false,
-    numberOfOpenings: 0,
-    primaryRole: "software_engineer",
+    numberOfOpenings: 1,
   });
 
   const [dialog, setDialog] = useState({
@@ -72,16 +73,6 @@ function JobPosting() {
     }));
   };
 
-  const handleSalaryRangeChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      salaryRange: {
-        ...prevData.salaryRange,
-        [id]: parseFloat(value),
-      },
-    }));
-  };
   const handleArrayInputChange = (name, index, event) => {
     if (Array.isArray(event)) {
       setFormData((prevData) => ({ ...prevData, [name]: event }));
@@ -95,51 +86,55 @@ function JobPosting() {
   };
 
   const handleGenerate = async () => {
-    formData.employer = userData.userProfile.companyName;
-    if (formData.hasOwnProperty("description")) {
-      delete formData.description;
+    const jobData = { ...formData };
+    
+    // Remove fields that shouldn't be sent to generation API
+    if ('description' in jobData) {
+      delete jobData.description;
+    }
+    if ('urgent' in jobData) {
+      delete jobData.urgent;
     }
 
-    if (formData.hasOwnProperty("urgent")) {
-      delete formData.urgent;
+    // Check required fields
+    const requiredFields = ['title', 'jobType', 'location'];
+    const missingFields = requiredFields.filter(field => !jobData[field]);
+    
+    if (missingFields.length > 0) {
+      setDialog({
+        isOpen: true,
+        title: "Incomplete Form",
+        message: `Please fill the following required fields: ${missingFields.join(', ')}`,
+        buttonText: "OK",
+      });
+      return;
     }
-
-    for (let field in formData) {
-      if (field !== "description" && field !== "urgent" && !formData[field]) {
-        setDialog({
-          isOpen: true,
-          title: "Incomplete Form",
-          message:
-            "Please fill all the form details to generate job description.",
-          buttonText: "OK",
-        });
-        return;
-      }
-    }
+    
     setGeneratingDescription(true);
     try {
-      const res = await companyService.generateJobDescription(formData);
-
+      const res = await companyService.generateJobDescription(jobData);
       setGeneratingDescription(false);
-      setFormData({ ...formData, description: res.data.data });
+      
+      if (res.success && res.data) {
+        setFormData(prev => ({ ...prev, description: res.data }));
+      }
     } catch (error) {
-      if (error.response.data.message.includes("Quota exceeded")) {
+      const errorMessage = error.response?.data?.message || error.message;
+      if (errorMessage.includes("Quota exceeded")) {
         setDialog({
           isOpen: true,
           title: "Quota Exceeded",
-          message:
-            "Error: Quota exceeded. You reached the limit for free job description generations. An upgrade to the plan is required to continue using this feature.",
+          message: "Error: Quota exceeded. You reached the limit for free job description generations. An upgrade to the plan is required to continue using this feature.",
           buttonText: "OK",
         });
       } else {
         setDialog({
           isOpen: true,
-          title: "Error genetating job description",
-          message: error.response.data.message,
+          title: "Error generating job description",
+          message: errorMessage,
           buttonText: "OK",
         });
       }
-
       setGeneratingDescription(false);
     }
   };
@@ -148,23 +143,62 @@ function JobPosting() {
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    formData.employer = userData?._id;
     setSubmitting(true);
 
     try {
-      const res = await companyService.postNewJob(formData);
+      const jobData = {
+        ...formData,
+        // Convert salary structure
+        salary: {
+          min: Number(formData.salary.min) || 0,
+          max: Number(formData.salary.max) || 0,
+          currency: formData.salary.currency || 'USD',
+          negotiable: Boolean(formData.salary.negotiable)
+        },
+        // Ensure category is set
+        category: formData.category || 'technology',
+        // Ensure arrays are properly set
+        additionalRequirements: Array.isArray(formData.additionalRequirements) 
+          ? formData.additionalRequirements.filter(req => req.trim() !== '')
+          : [],
+        skills: Array.isArray(formData.skills) 
+          ? formData.skills.filter(skill => skill.trim() !== '')
+          : [],
+        benefits: Array.isArray(formData.benefits) 
+          ? formData.benefits.filter(benefit => benefit.trim() !== '')
+          : [],
+        requirements: Array.isArray(formData.requirements) 
+          ? formData.requirements.filter(req => req.trim() !== '')
+          : [],
+        responsibilities: Array.isArray(formData.responsibilities) 
+          ? formData.responsibilities.filter(resp => resp.trim() !== '')
+          : []
+      };
+
+      // Remove any empty string fields and empty keys
+      Object.keys(jobData).forEach(key => {
+        if (key === '' || jobData[key] === '' || jobData[key] === null || jobData[key] === undefined) {
+          delete jobData[key];
+        }
+      });
+      
+      console.log('Submitting job data:', jobData);
+      await companyService.postNewJob(jobData);
+      
       setDialog({
         isOpen: true,
         title: "Job Posting Successful",
         message: "Your job posting has been submitted successfully.",
-        buttonText: "Got it!",
-        onClose: () => navigate("/dashboard/home"),
+        buttonText: "View Jobs",
+        onClose: () => navigate("/jobs"),
       });
     } catch (error) {
+      console.error('Job posting error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to post job';
       setDialog({
         isOpen: true,
         title: "Error Posting Job",
-        message: error.response.data.message,
+        message: errorMessage,
         buttonText: "Okay",
       });
     }
@@ -173,10 +207,11 @@ function JobPosting() {
 
   const jobTypeOptions = [
     { value: "default", label: "Select Job Type" },
-    { value: "Full-time", label: "Full-time" },
-    { value: "Part-time", label: "Part-time" },
-    { value: "Internship", label: "Internship" },
-    { value: "Freelance", label: "Freelance" },
+    { value: "full-time", label: "Full-time" },
+    { value: "part-time", label: "Part-time" },
+    { value: "internship", label: "Internship" },
+    { value: "freelance", label: "Freelance" },
+    { value: "contract", label: "Contract" },
   ];
 
   const roleOptions = [
@@ -217,7 +252,7 @@ function JobPosting() {
   ];
 
   return (
-    <div className="py-3 px-2 md:px-8 lg:px-20">
+    <div className="py-3 px-2 md:px-8 lg:px-20 pt-20">
       <div className="my-5">
         <h2 className="font-semibold text-2xl">New Job Posting</h2>
       </div>
@@ -244,7 +279,8 @@ function JobPosting() {
                 label="Type of position"
                 description="Select the type of position you are offering."
                 isRequired={true}
-                id="type"
+                id="jobType"
+                name="jobType"
                 options={jobTypeOptions}
                 onChange={handleInputChange}
               />
@@ -254,7 +290,8 @@ function JobPosting() {
               <SelectInput
                 label="Select your primary role"
                 description="Select the primary role that the candidate will be expected to perform."
-                id="primaryRole"
+                id="category"
+                name="category"
                 options={roleOptions}
                 isRequired={true}
                 optgroup={true}
@@ -334,24 +371,24 @@ function JobPosting() {
                 <RadioButton
                   id="onsite"
                   name="workMode"
-                  value="Onsite"
-                  checked={formData.workMode === "Onsite"}
+                  value="onsite"
+                  checked={formData.workMode === "onsite"}
                   onChange={handleInputChange}
                   label="Onsite"
                 />
                 <RadioButton
                   id="hybrid"
                   name="workMode"
-                  value="Hybrid"
-                  checked={formData.workMode === "Hybrid"}
+                  value="hybrid"
+                  checked={formData.workMode === "hybrid"}
                   onChange={handleInputChange}
                   label="Hybrid"
                 />
                 <RadioButton
                   id="remote"
                   name="workMode"
-                  value="Remote"
-                  checked={formData.workMode === "Remote"}
+                  value="remote"
+                  checked={formData.workMode === "remote"}
                   onChange={handleInputChange}
                   label="Remote"
                 />
@@ -416,19 +453,27 @@ function JobPosting() {
               <div className="flex space-x-3">
                 <InputField
                   label="Salary Range From"
-                  id="from"
+                  id="min"
+                  name="salary.min"
                   type="number"
                   description="Enter the minimum salary for this position."
-                  value={formData.salaryRange.from}
-                  onChange={handleSalaryRangeChange}
+                  value={formData.salary.min}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    salary: { ...prev.salary, min: parseFloat(e.target.value) || 0 }
+                  }))}
                 />
                 <InputField
                   label="Salary Range To"
-                  id="to"
+                  id="max"
+                  name="salary.max"
                   type="number"
                   description="Enter the maximum salary for this position."
-                  value={formData.salaryRange.to}
-                  onChange={handleSalaryRangeChange}
+                  value={formData.salary.max}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    salary: { ...prev.salary, max: parseFloat(e.target.value) || 0 }
+                  }))}
                 />
               </div>
 
@@ -458,7 +503,11 @@ function JobPosting() {
               />
             </div>
 
-            <SubmissionButton label="Submit" type="submit" className={"py-3"} />
+            <SubmissionButton 
+              label={submitting ? "Submitting..." : "Submit"} 
+              type="submit" 
+              className={"py-3"} 
+            />
           </form>
         </div>
         <Dialogbox

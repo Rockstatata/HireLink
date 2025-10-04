@@ -6,7 +6,6 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import logo from "../../components/Home/assets/media/logo.png";
 import { useDispatch, useSelector } from "react-redux";
 import { userService } from "../../services/userService";
 import { logout } from "../../store/authSlice";
@@ -26,7 +25,7 @@ const sidebarLinks = [
   },
   {
     name: "Shortlisted",
-    href: "/dashboard/shortedlisted",
+    href: "/dashboard/shortlisted",
     icon: ShieldCheckIcon,
   },
   {
@@ -59,20 +58,8 @@ function DashboardSidebar() {
   };
 
   return (
-    <div className="sticky top-0 flex h-screen w-full flex-col justify-between border-r border-gray-200 bg-white px-1 py-5 xl:py-12 xl:px-2">
-      <div className="ie-logo px-3 py-0 text-center xl:text-left">
-        <div className="font-semibold text-xl cursor-pointer flex items-center text-gray-800">
-          <Link to="/" className="flex items-center font-Poppins">
-            <img
-              src={logo}
-              className="w-30 rounded-lg mr-3"
-              alt="HireLink Logo"
-            />
-            
-          </Link>
-        </div>
-      </div>
-      <div className="ie-menu mt-8 h-full">
+    <div className="sticky top-0 flex h-screen w-full flex-col justify-between border-r border-gray-200 bg-white px-1 py-5 xl:py-8 xl:px-2">
+      <div className="ie-menu mt-2 h-full">
         <div className="flex flex-col items-center gap-3 p-1 xl:items-stretch xl:px-3">
           {sidebarLinks.map((item) => {
             return (

@@ -52,15 +52,19 @@ function Login() {
       
       // Navigate based on user role and onboarding status
       if (loggedInUser.role === "jobSeeker") {
-        if (loggedInUser.userProfile.doneOnboarding === true) {
-          navigate("/");
+        // Check if user has a jobSeekerProfile and if onboarding is done
+        const hasProfile = loggedInUser.jobSeekerProfile || loggedInUser.userProfile?.doneOnboarding;
+        if (hasProfile) {
+          navigate("/jobseeker/profile", { state: { fromLogin: true } });
         } else {
           navigate("/user-onboarding");
         }
       } else if (loggedInUser.role === "employer") {
-        if (loggedInUser.userProfile.doneOnboarding === true) {
+        // Check if user has a companyProfile and if onboarding is done
+        const hasProfile = loggedInUser.companyProfile || loggedInUser.userProfile?.doneOnboarding;
+        if (hasProfile) {
           console.log("Sending to dashboard");
-          navigate("/dashboard/home");
+          navigate("/dashboard/home", { state: { fromLogin: true } });
         } else {
           console.log(loggedInUser);
           navigate("/company-onboarding");
