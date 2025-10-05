@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "../Pages/Home";
+import JobListing from "../Pages/JobListing";
 import Login from "../components/LoginSignup/Login";
 import Signup from "../components/LoginSignup/Signup";
 import UserOnboarding from "../components/LoginSignup/UserOnboarding";
@@ -14,6 +15,7 @@ function AllRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/jobs" element={<JobListing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 

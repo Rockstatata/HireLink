@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import AllRoutes from "./Routes/AllRoutes";
-import Navbar from './components/Navbar'
+import Navbar from './components/Navbar';
 import { useSelector } from "react-redux";
 import useUpdateUserData from "./hooks/useUpdateUserData";
 import { useEffect } from "react";
