@@ -14,6 +14,8 @@ import JobDetails from "../Pages/JobDetails";
 import JobManagement from "../components/CompanyDashboard/JobManagement";
 import JobSeekerDashboard from "../components/JobSeekerDashboard/JobSeekerDashboard";
 import Companies from "../Pages/Companies";
+import UserProfile from "../Pages/UserProfile";
+import UserPublicProfile from "../Pages/UserPublicProfile";
 
 
 
@@ -47,7 +49,8 @@ function AllRoutes() {
           </PrivateRoutes>
         }
       />
-      
+      <Route path="/user/:id" element={<UserPublicProfile />} />
+
       <Route
         path="/post-new-job"
         element={
@@ -66,7 +69,15 @@ function AllRoutes() {
           </PrivateRoutes>
         } 
       />
-
+      {/* User Profile Route */}
+    <Route
+        path="/profile"
+        element={
+          <PrivateRoutes>
+            <UserProfile />
+          </PrivateRoutes>
+        }
+      />
 
     </Routes>
   );
