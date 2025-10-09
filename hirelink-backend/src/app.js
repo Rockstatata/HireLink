@@ -20,8 +20,8 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Middleware
-app.use(cors({
-  origin: ["http://localhost:5174", "http://localhost:3000", "http://localhost:5173"],
+app.use(cors({  
+  origin: "http://localhost:5173",
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
@@ -57,9 +57,10 @@ app.use((req, res) => {
 
 connectDB()
     .then(() => {
+        console.log("DB connected successfully");
         app.listen(PORT, () => {
             console.log(`Server running at port : ${PORT}`);
-        })
+        });
     }
     ).catch((error) => {
         console.log(`DB Connection failed: ${error}`);

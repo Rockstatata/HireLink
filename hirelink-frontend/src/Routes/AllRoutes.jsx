@@ -9,7 +9,6 @@ import CompanyOnboarding from "../components/LoginSignup/CompanyOnboarding";
 import Dashboard from "../Pages/Dashboard";
 import CompanyDashboard from "../Pages/CompanyDashboard";
 import PrivateRoutes from "./PrivateRoutes";
-import JobListing from "../Pages/JobListing";
 import JobPosting from "../Pages/JobPosting";
 import JobDetails from "../Pages/JobDetails";
 import JobManagement from "../components/CompanyDashboard/JobManagement";
