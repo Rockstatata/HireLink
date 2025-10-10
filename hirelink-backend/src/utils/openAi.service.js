@@ -47,6 +47,93 @@ export const generateJobDescription = async (jobDetails) => {
   }
 };
 
+export const generateJobRecommendations = async (userProfile, jobs) => {
+  try {
+    // Simulate AI analysis - in production, use OpenAI API
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const { skills = [], experience = 0, location, jobPreferences = {} } = userProfile;
+
+    // Simple matching logic based on skills and experience
+    const recommendations = jobs
+      .filter(job => {
+        const skillMatch = job.skills?.some(skill => skills.includes(skill)) || false;
+        const experienceMatch = job.experience <= experience + 2; // Allow some flexibility
+        const locationMatch = !location || !job.location || job.location.toLowerCase().includes(location.toLowerCase());
+
+        return skillMatch && experienceMatch && locationMatch;
+      })
+      .sort((a, b) => {
+        // Sort by relevance (number of matching skills)
+        const aMatches = a.skills?.filter(skill => skills.includes(skill)).length || 0;
+        const bMatches = b.skills?.filter(skill => skills.includes(skill)).length || 0;
+        return bMatches - aMatches;
+      })
+      .slice(0, 5); // Top 5 recommendations
+
+    return recommendations;
+  } catch (error) {
+    console.error('Error generating job recommendations:', error);
+    throw new Error('Failed to generate job recommendations');
+  }
+};
+
+export const matchCandidates = async (job, applicants) => {
+  try {
+    // Simulate AI matching - in production, use OpenAI API
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const { skills: jobSkills = [], experience: jobExp = 0 } = job;
+
+    const matches = applicants
+      .map(applicant => {
+        const userSkills = applicant.userProfile?.skills || [];
+        const userExp = applicant.userProfile?.yearsOfExperience || 0;
+
+        const skillScore = jobSkills.filter(skill => userSkills.includes(skill)).length / jobSkills.length;
+        const expScore = Math.max(0, 1 - Math.abs(userExp - jobExp) / 5); // Normalize experience difference
+
+        const totalScore = (skillScore * 0.7) + (expScore * 0.3); // Weighted score
+
+        return { ...applicant.toObject(), matchScore: totalScore };
+      })
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 10); // Top 10 matches
+
+    return matches;
+  } catch (error) {
+    console.error('Error matching candidates:', error);
+    throw new Error('Failed to match candidates');
+  }
+};
+
+export const analyzeSkillGaps = async (userProfile, targetJob) => {
+  try {
+    // Simulate AI analysis - in production, use OpenAI API
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const userSkills = userProfile.skills || [];
+    const jobSkills = targetJob.skills || [];
+    const userExp = userProfile.yearsOfExperience || 0;
+    const jobExp = targetJob.experience || 0;
+
+    const missingSkills = jobSkills.filter(skill => !userSkills.includes(skill));
+    const expGap = Math.max(0, jobExp - userExp);
+
+    return {
+      missingSkills,
+      experienceGap: expGap,
+      recommendations: missingSkills.map(skill => `Learn ${skill} through online courses or projects`)
+    };
+  } catch (error) {
+    console.error('Error analyzing skill gaps:', error);
+    throw new Error('Failed to analyze skill gaps');
+  }
+};
+
 export default {
-  generateJobDescription
+  generateJobDescription,
+  generateJobRecommendations,
+  matchCandidates,
+  analyzeSkillGaps
 };

@@ -5,7 +5,7 @@ import { JobSeekerProfile } from "../models/jobSeekerProfile.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { generateJobDescription } from "../utils/openAi.service.js";
+import { generateJobDescription, generateJobRecommendations, matchCandidates } from "../utils/openAi.service.js";
 import { JSDOM } from "jsdom";
 import createDOMPurify from "dompurify";
 
@@ -353,7 +353,7 @@ const sendJobDescription = asyncHandler(async (req, res) => {
 const applyForJob = asyncHandler(async (req, res) => {
   const { role, _id } = req.user;
   const jobId = req.params.id;
-  const { coverLetter } = req.body;
+  const { coverLetter, resume } = req.body;
 
   if (role !== "jobSeeker") {
     throw new ApiError(403, "Only job seekers can apply for jobs");
@@ -368,26 +368,34 @@ const applyForJob = asyncHandler(async (req, res) => {
     throw new ApiError(400, "This job is no longer accepting applications");
   }
 
-  // Check if user already applied
-  const hasApplied = job.applicants.some(applicant => 
-    applicant.user.toString() === _id.toString()
-  );
-
-  if (hasApplied) {
+  // Check if user already applied using Application model
+  const existingApplication = await Application.findOne({ job: jobId, applicant: _id });
+  if (existingApplication) {
     throw new ApiError(400, "You have already applied for this job");
   }
 
-  // Add application
+  // Create application document
+  const application = await Application.create({
+    job: jobId,
+    applicant: _id,
+    coverLetter: coverLetter || "",
+    resume: resume || "",
+  });
+
+  // Also add to Job.applicants for backward compatibility
   job.applicants.push({
     user: _id,
     coverLetter: coverLetter || "",
+    resume: resume || "",
+    status: "pending",
+    appliedAt: new Date(),
   });
 
   job.applicationCount += 1;
   await job.save();
 
   return res.status(200).json(
-    new ApiResponse(200, {}, "Job applied successfully")
+    new ApiResponse(200, { application }, "Job applied successfully")
   );
 });
 
@@ -693,6 +701,146 @@ const getMyCompanyApplications = asyncHandler(async (req, res) => {
   );
 });
 
+// Shortlist a candidate using Application model
+const shortlistCandidate = asyncHandler(async (req, res) => {
+  const { jobId, applicantId } = req.body;
+  const userId = req.user._id;
+
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized or job not found");
+  }
+
+  const application = await Application.findOneAndUpdate(
+    { job: jobId, applicant: applicantId },
+    { status: "shortlisted", reviewedAt: new Date(), reviewedBy: userId },
+    { new: true }
+  ).populate('applicant', 'name email');
+
+  if (!application) {
+    throw new ApiError(404, "Application not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, application, "Candidate shortlisted successfully")
+  );
+});
+
+// Remove from shortlist
+const removeFromShortlist = asyncHandler(async (req, res) => {
+  const { jobId, applicantId } = req.body;
+  const userId = req.user._id;
+
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized or job not found");
+  }
+
+  const application = await Application.findOneAndUpdate(
+    { job: jobId, applicant: applicantId },
+    { status: "reviewed", reviewedAt: new Date(), reviewedBy: userId },
+    { new: true }
+  );
+
+  if (!application) {
+    throw new ApiError(404, "Application not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Candidate removed from shortlist")
+  );
+});
+
+// Reject candidate
+const rejectCandidate = asyncHandler(async (req, res) => {
+  const { jobId, applicantId } = req.body;
+  const userId = req.user._id;
+
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized or job not found");
+  }
+
+  const application = await Application.findOneAndUpdate(
+    { job: jobId, applicant: applicantId },
+    { status: "rejected", reviewedAt: new Date(), reviewedBy: userId },
+    { new: true }
+  );
+
+  if (!application) {
+    throw new ApiError(404, "Application not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Candidate rejected")
+  );
+});
+
+// Get applications for a job using Application model
+const getJobApplicationsViaApplication = asyncHandler(async (req, res) => {
+  const { id: jobId } = req.params;
+  const userId = req.user._id;
+  const { page = 1, limit = 10, status = 'all' } = req.query;
+
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized or job not found");
+  }
+
+  const filter = { job: jobId };
+  if (status !== 'all') {
+    filter.status = status;
+  }
+
+  const pageNumber = parseInt(page);
+  const limitNumber = parseInt(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const applications = await Application.find(filter)
+    .populate('applicant', 'name email userProfile')
+    .sort({ appliedAt: -1 })
+    .skip(skip)
+    .limit(limitNumber);
+
+  const total = await Application.countDocuments(filter);
+
+  const result = {
+    docs: applications,
+    totalDocs: total,
+    limit: limitNumber,
+    page: pageNumber,
+    totalPages: Math.ceil(total / limitNumber),
+    hasNextPage: skip + limitNumber < total,
+    hasPrevPage: pageNumber > 1,
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, result, "Job applications fetched successfully")
+  );
+});
+
+// AI-powered job recommendations for job seekers
+const getJobRecommendations = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { limit = 5 } = req.query;
+
+  const user = await User.findById(userId).populate('jobSeekerProfile');
+  if (!user || user.role !== 'jobSeeker') {
+    throw new ApiError(403, 'Only job seekers can get recommendations');
+  }
+
+  // Get recent jobs
+  const jobs = await Job.find({ isActive: true })
+    .populate('company', 'companyName companyLogo')
+    .limit(100); // Sample from recent jobs
+
+  const recommendations = await generateJobRecommendations(user.userProfile, jobs);
+
+  return res.status(200).json(
+    new ApiResponse(200, recommendations.slice(0, limit), 'Job recommendations generated successfully')
+  );
+});
+
 export {
   ping,
   authPing,
@@ -711,4 +859,9 @@ export {
   getJobApplications,
   getMyApplications,
   getMyCompanyApplications,
+  shortlistCandidate,
+  removeFromShortlist,
+  rejectCandidate,
+  getJobApplicationsViaApplication,
+  getJobRecommendations,
 };

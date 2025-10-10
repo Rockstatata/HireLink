@@ -6,13 +6,18 @@ import { Job } from "../models/job.model.js";
 import { Application } from "../models/application.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.service.js";
+import { analyzeSkillGaps } from "../utils/openAi.service.js";
 
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 1000 * 60 * 60 * 24 * 7,
-  domain: process.env.NODE_ENV = "localhost",
+  domain: process.env.NODE_ENV === "production" ? "noobnarayan.in" : "localhost",
 };
 
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -28,7 +33,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
   } catch (error) {
     throw new ApiError(
       500,
-      `Something went wrong while generating tokens: ${error}`
+      `Something went wrong while generating referesh and access token: ${error}`
     );
   }
 };
@@ -276,6 +281,185 @@ const getMyApplications = asyncHandler(async (req, res) => {
   );
 });
 
+const getUserProfile = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "User profile fetch successful"));
+});
+
+const updateProfilePicture = asyncHandler(async (req, res) => {
+  const profilePictureLocalPath = req.file?.path;
+
+  if (!profilePictureLocalPath) {
+    throw new ApiError(400, "Profile Picture file is missing");
+  }
+
+  let user = await User.findById(req.user._id);
+
+  let oldProfilePictureUrl = user?.userProfile?.profilePicture;
+
+  const profilePicture = await uploadOnCloudinary(profilePictureLocalPath);
+  if (!profilePicture?.url) {
+    throw new ApiError(400, "Error while uploading profile picture");
+  }
+
+  if (user.role === "jobSeeker") {
+    user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          "userProfile.profilePicture": profilePicture.url,
+        },
+      },
+      { new: true }
+    ).select("-password");
+  } else if (user.role === "employer") {
+    user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          "userProfile.companyLogo": profilePicture.url,
+        },
+      },
+      { new: true }
+    ).select("-password");
+  }
+
+  if (
+    oldProfilePictureUrl &&
+    oldProfilePictureUrl !==
+      "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"
+  ) {
+    try {
+      const splitUrl = oldProfilePictureUrl.split("/");
+      const filenameWithExtension = splitUrl[splitUrl.length - 1];
+      const imageId = filenameWithExtension.split(".")[0];
+      const res = await deleteFromCloudinary(imageId);
+    } catch (error) {
+      throw new ApiError(
+        304,
+        `Error deleting profile picture: ${error.message}`
+      );
+    }
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "User profile picture updated successfully")
+    );
+});
+
+const addSkill = asyncHandler(async (req, res) => {
+  const { skill } = req.body;
+  const { role } = req.user;
+  if (role !== "jobSeeker") {
+    throw new ApiError(401, "You are not authorized to perform this action");
+  }
+
+  if (!skill) {
+    throw new ApiError(400, "Skill is required");
+  }
+
+  const user = await User.findById(req.user._id);
+  user.userProfile.skills.push(skill);
+  user.markModified("userProfile.skills");
+  await user.save();
+
+  const updatedUser = await User.findById(req.user._id);
+  console.log(updatedUser.userProfile.skills);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedUser.userProfile.skills,
+        "Skills updated successfully"
+      )
+    );
+});
+
+const removeSkill = asyncHandler(async (req, res) => {
+  const { skill } = req.body;
+  const { role } = req.user;
+  if (role !== "jobSeeker") {
+    throw new ApiError(401, "You are not authorized to perform this action");
+  }
+  if (!skill) {
+    throw new ApiError(400, "Skill is required");
+  }
+
+  const user = await User.findById(req.user._id);
+  user.userProfile.skills = user.userProfile.skills.filter((s) => s !== skill);
+  user.markModified("userProfile.skills");
+  await user.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Skills removed successfully"));
+});
+
+const updateResume = asyncHandler(async (req, res) => {
+  const { resume } = req.body;
+  const { role } = req.user;
+  if (role !== "jobSeeker") {
+    throw new ApiError(401, "You are not authorized to perform this action");
+  }
+  if (!resume) {
+    throw new ApiError(400, "Resume is required");
+  }
+
+  const user = await User.findById(req.user._id);
+  user.userProfile.resume = resume;
+  user.markModified("userProfile.resume");
+  await user.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Resume updated successfully"));
+});
+
+// AI-powered skill gap analysis
+const analyzeSkillGap = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { jobId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user || user.role !== 'jobSeeker') {
+    throw new ApiError(403, 'Only job seekers can analyze skill gaps');
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new ApiError(404, 'Job not found');
+  }
+
+  const analysis = await analyzeSkillGaps(user.userProfile, job);
+
+  return res.status(200).json(
+    new ApiResponse(200, analysis, 'Skill gap analysis completed successfully')
+  );
+});
+
+// Testing endpoints
+const ping = (req, res) => {
+  res.send("User API is working");
+};
+const authPing = (req, res) => {
+  res.send("User Auth is working");
+};
+
+const userPublicProfile = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  const user = await User.findById(userId).select(
+    "email _id userProfile.profilePicture userProfile.address userProfile.bio userProfile.location userProfile.yearsOfExperience userProfile.socialProfiles userProfile.workExperience userProfile.education userProfile.skills userProfile.name userProfile.resume"
+  );
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User profile fetch successful"));
+});
+
 export { 
   registerUser, 
   loginUser, 
@@ -283,5 +467,14 @@ export {
   getCurrentUser, 
   updateUserProfile,
   getSavedJobs,
-  getMyApplications
+  getMyApplications,
+  getUserProfile,
+  ping,
+  authPing,
+  updateProfilePicture,
+  addSkill,
+  removeSkill,
+  updateResume,
+  userPublicProfile,
+  analyzeSkillGap
 };
