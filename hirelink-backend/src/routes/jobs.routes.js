@@ -22,6 +22,8 @@ import {
   rejectCandidate,
   getJobApplicationsViaApplication,
   getJobRecommendations,
+  hireCandidate,
+  checkApplicationStatus,
 } from "../controllers/job.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -47,6 +49,7 @@ router.route("/jobs/:id/applications-via-app").get(verifyJWT, getJobApplications
 router.route("/shortlist-candidate").post(verifyJWT, shortlistCandidate);
 router.route("/remove-from-shortlist").post(verifyJWT, removeFromShortlist);
 router.route("/reject-candidate").post(verifyJWT, rejectCandidate);
+router.route("/hire-candidate").post(verifyJWT, hireCandidate);
 
 // Job seeker routes
 router.route("/apply/:id").post(verifyJWT, applyForJob);
@@ -55,5 +58,6 @@ router.route("/remove-saved-job/:id").post(verifyJWT, removeSavedJob);
 router.route("/saved-jobs").get(verifyJWT, getSavedJobs);
 router.route("/my-applications").get(verifyJWT, getMyApplications);
 router.route("/job-recommendations").get(verifyJWT, getJobRecommendations);
+router.route("/application-status/:jobId").get(verifyJWT, checkApplicationStatus);
 
 export default router;

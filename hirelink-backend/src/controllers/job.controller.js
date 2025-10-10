@@ -696,10 +696,16 @@ const getMyCompanyApplications = asyncHandler(async (req, res) => {
     .populate({
       path: 'applicant',
       select: 'name email userProfile jobSeekerProfile',
-      populate: {
-        path: 'jobSeekerProfile',
-        select: 'profilePicture address bio location yearsOfExperience socialProfiles workExperience education skills name resume'
-      }
+      populate: [
+        {
+          path: 'userProfile',
+          select: 'profilePicture address bio location yearsOfExperience socialProfiles workExperience education skills name resume'
+        },
+        {
+          path: 'jobSeekerProfile',
+          select: 'profilePicture address bio location yearsOfExperience socialProfiles workExperience education skills name resume'
+        }
+      ]
     })
     .populate({
       path: 'job',
@@ -715,23 +721,39 @@ const getMyCompanyApplications = asyncHandler(async (req, res) => {
   console.log("Total applications count:", total);
 
   // Map to the expected format
-  const formattedApplications = applications.map(app => ({
-    applicantProfile: {
-      _id: app.applicant._id,
-      name: app.applicant.name || app.applicant.jobSeekerProfile?.name,
-      email: app.applicant.email,
-      profilePicture: app.applicant.userProfile?.profilePicture || app.applicant.jobSeekerProfile?.profilePicture,
-      userProfile: app.applicant.jobSeekerProfile // Map jobSeekerProfile to userProfile
-    },
-    jobDetails: {
-      _id: app.job._id,
-      title: app.job.title
-    },
-    status: app.status,
-    appliedAt: app.appliedAt,
-    coverLetter: app.coverLetter,
-    resume: app.resume
-  }));
+  const formattedApplications = applications.map(app => {
+    const applicant = app.applicant;
+    const userProfile = applicant.userProfile || {};
+    const jobSeekerProfile = applicant.jobSeekerProfile || {};
+    
+    // Profile picture can be in either userProfile or jobSeekerProfile
+    const profilePicture = userProfile.profilePicture || 
+                          jobSeekerProfile.profilePicture || 
+                          "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
+
+    return {
+      applicantProfile: {
+        _id: applicant._id,
+        name: applicant.name || userProfile.name || jobSeekerProfile.name,
+        email: applicant.email,
+        profilePicture: profilePicture,
+        userProfile: {
+          ...userProfile,
+          ...jobSeekerProfile, // Merge both profiles
+          profilePicture: profilePicture, // Ensure profile picture is available
+          name: applicant.name || userProfile.name || jobSeekerProfile.name
+        }
+      },
+      jobDetails: {
+        _id: app.job._id,
+        title: app.job.title
+      },
+      status: app.status,
+      appliedAt: app.appliedAt,
+      coverLetter: app.coverLetter,
+      resume: app.resume
+    };
+  });
 
   console.log("Sample formatted application:", formattedApplications[0] ? {
     jobTitle: formattedApplications[0].jobDetails.title,
@@ -927,6 +949,59 @@ const getJobRecommendations = asyncHandler(async (req, res) => {
   );
 });
 
+// Hire a candidate (delete application after hiring)
+const hireCandidate = asyncHandler(async (req, res) => {
+  const { jobId, applicantId } = req.body;
+  const employerId = req.user._id;
+
+  console.log("Hiring candidate:", { jobId, applicantId, employerId });
+
+  // Verify job belongs to the employer
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== employerId.toString()) {
+    throw new ApiError(403, "You can only hire candidates for your own job postings");
+  }
+
+  // Find and delete the application
+  const application = await Application.findOneAndDelete({
+    job: jobId,
+    applicant: applicantId
+  });
+
+  if (!application) {
+    throw new ApiError(404, "Application not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Candidate hired successfully. Application has been removed.")
+  );
+});
+
+// Check application status for a job
+const checkApplicationStatus = asyncHandler(async (req, res) => {
+  const { jobId } = req.params;
+  const userId = req.user._id;
+
+  console.log("Checking application status:", { jobId, userId });
+
+  // Check if user has applied for this job
+  const application = await Application.findOne({
+    job: jobId,
+    applicant: userId
+  });
+
+  // Check if user has saved this job
+  const user = await User.findById(userId).populate('jobSeekerProfile');
+  const jobSeekerProfile = user?.jobSeekerProfile;
+  const hasSaved = jobSeekerProfile?.savedJobs?.includes(jobId) || false;
+
+  const hasApplied = !!application;
+
+  return res.status(200).json(
+    new ApiResponse(200, { hasApplied, hasSaved }, "Application status checked successfully")
+  );
+});
+
 export {
   ping,
   authPing,
@@ -950,4 +1025,6 @@ export {
   rejectCandidate,
   getJobApplicationsViaApplication,
   getJobRecommendations,
+  hireCandidate,
+  checkApplicationStatus,
 };

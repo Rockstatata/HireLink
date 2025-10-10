@@ -3,7 +3,7 @@ import SavedJobsTab from '../components/JobSeekerDashboard/SavedJobsTab';
 
 function SavedJobs() {
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-background-secondary pt-16">
       <div className="container mx-auto px-4 py-8">
         <SavedJobsTab />
       </div>

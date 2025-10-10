@@ -134,7 +134,7 @@ function ChangePassword() {
           className={`w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
             loading 
               ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+              : 'bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
           }`}
         >
           {loading ? 'Changing Password...' : 'Change Password'}

@@ -5,7 +5,8 @@ import {
   getMyMessages,
   markMessageAsRead,
   markAllMessagesAsRead,
-  getUnreadMessageCount
+  getUnreadMessageCount,
+  sendMessageResponse
 } from "../controllers/message.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -17,6 +18,7 @@ router.use(verifyJWT);
 // Send messages
 router.route("/send").post(sendMessage);
 router.route("/send-chat-request").post(sendChatRequest);
+router.route("/:messageId/respond").post(sendMessageResponse);
 
 // Get messages
 router.route("/").get(getMyMessages);

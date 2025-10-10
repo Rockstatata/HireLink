@@ -16,6 +16,20 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleLogoClick = () => {
+    if (userData) {
+      if (userData.role === 'jobSeeker') {
+        navigate('/my-dashboard');
+      } else if (userData.role === 'employer') {
+        navigate('/dashboard/home');
+      } else {
+        navigate('/');
+      }
+    } else {
+      navigate('/');
+    }
+  };
+
   const handleLogout = () => {
     userService
       .logout()
@@ -37,13 +51,16 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo - Left Side */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center font-poppins bg-text-inverse/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-primary-light/30 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <button 
+              onClick={handleLogoClick}
+              className="flex items-center font-poppins bg-text-inverse/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-primary-light/30 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+            >
               <img
                 src={logo}
                 className="w-16 h-auto rounded-md"
                 alt="HireLink Logo"
               />
-            </Link>
+            </button>
           </div>
           
           {/* Navigation - Right Side */}
@@ -53,12 +70,12 @@ const Navbar = () => {
                 
                 {userData && (
                   <>
-                  <a
-                  href="/"
-                  className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Home
-                </a>
+                  <button
+                    onClick={handleLogoClick}
+                    className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                  >
+                    Home
+                  </button>
                     <a
                       href="/jobs"
                       className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
@@ -175,12 +192,12 @@ const Navbar = () => {
 
       <div className={`${isOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-primary-dark">
-          <a
-            href="#"
-            className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+          <button
+            onClick={handleLogoClick}
+            className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105 w-full text-left"
           >
             Home
-          </a>
+          </button>
           {userData && (
             <>
               <a

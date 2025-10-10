@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { userService } from "../../services/userService";
 import { useSelector } from "react-redux";
 
 function JobDetailsCard({ jobData }) {
-  const { status, userData } = useSelector((store) => store.auth);
+  const { userData } = useSelector((store) => store.auth);
 
   const {
     title,
@@ -44,10 +44,30 @@ function JobDetailsCard({ jobData }) {
   const [showAppliedMessage, setShowAppliedMessage] = useState(false);
   const [showSavedMessage, setShowSavedMessage] = useState(false);
 
+  // Check application status when component mounts and user/job data is available
+  useEffect(() => {
+    const checkUserApplicationStatus = async () => {
+      if (userData?.role === 'jobSeeker' && jobData._id) {
+        try {
+          const status = await userService.checkApplicationStatus(jobData._id);
+          setHasApplied(status.hasApplied || false);
+          setHasSaved(status.hasSaved || false);
+        } catch (error) {
+          console.error('Error checking application status:', error);
+          // If there's an error, assume not applied/saved
+          setHasApplied(false);
+          setHasSaved(false);
+        }
+      }
+    };
+
+    checkUserApplicationStatus();
+  }, [userData, jobData._id]);
+
   const saveJob = async () => {
     setSaving(true);
     try {
-      const res = await userService.saveJob(jobData._id);
+      await userService.saveJob(jobData._id);
       setHasSaved(true);
       setShowSavedMessage(true);
       setTimeout(() => setShowSavedMessage(false), 3000);
@@ -73,7 +93,7 @@ function JobDetailsCard({ jobData }) {
 
     setApplying(true);
     try {
-      const res = await userService.applyForJob(jobData._id);
+      await userService.applyForJob(jobData._id);
       setHasApplied(true);
       setShowAppliedMessage(true);
       setTimeout(() => setShowAppliedMessage(false), 5000);
@@ -111,9 +131,9 @@ function JobDetailsCard({ jobData }) {
       )}
       
       {showSavedMessage && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-800">Job Saved Successfully!</h4>
-          <p className="text-blue-700 text-sm">The job has been saved successfully. You can view it in your saved jobs.</p>
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+          <h4 className="font-semibold text-primary">Job Saved Successfully!</h4>
+          <p className="text-primary/80 text-sm">The job has been saved successfully. You can view it in your saved jobs.</p>
         </div>
       )}
 

@@ -38,6 +38,7 @@ export const userService = {
   updateEducation,
   deleteEducation,
   changePassword,
+  checkApplicationStatus,
 };
 
 async function login(userData) {
@@ -145,5 +146,10 @@ async function deleteEducation(educationId) {
 
 async function changePassword(data) {
   const response = await apiCall.post("/users/change-password", data);
+  return response.data;
+}
+
+async function checkApplicationStatus(jobId) {
+  const response = await apiCall.get(`/jobs/application-status/${jobId}`);
   return response.data;
 }

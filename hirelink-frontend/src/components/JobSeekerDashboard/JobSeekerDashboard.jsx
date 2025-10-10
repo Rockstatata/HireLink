@@ -7,7 +7,7 @@ import SavedJobsTab from "./SavedJobsTab";
 
 function JobSeekerDashboard() {
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
+    <div className="min-h-screen bg-background-secondary pt-16">
       <div className="flex">
         <JobSeekerSidebar />
         

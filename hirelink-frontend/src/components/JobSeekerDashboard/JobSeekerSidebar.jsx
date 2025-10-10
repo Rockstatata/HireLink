@@ -62,7 +62,7 @@ function JobSeekerSidebar() {
   };
 
   return (
-    <div className="sticky top-0 flex h-screen w-full max-w-[280px] flex-col justify-between border-r border-gray-200 bg-white px-1 py-5 xl:py-8 xl:px-2">
+    <div className="sticky top-0 flex h-screen w-full max-w-[280px] flex-col justify-between border-r border-neutral-200 bg-white px-1 py-5 xl:py-8 xl:px-2">
       <div className="ie-menu mt-2 h-full">
         <div className="flex flex-col items-center gap-3 p-1 xl:items-stretch xl:px-3">
           {navigation.map((item) => {
@@ -105,8 +105,8 @@ function JobSeekerSidebar() {
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full">
-              <i className="fas fa-user text-gray-400"></i>
+            <div className="w-full h-full bg-neutral-200 flex items-center justify-center rounded-full">
+              <i className="fas fa-user text-neutral-400"></i>
             </div>
           )}
         </div>

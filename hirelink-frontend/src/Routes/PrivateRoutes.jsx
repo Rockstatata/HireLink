@@ -19,7 +19,7 @@ function PrivateRoutes({ children }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center text-gray-600 h-screen">
+      <div className="flex justify-center items-center text-text-secondary h-screen">
         Loading...
       </div>
     );

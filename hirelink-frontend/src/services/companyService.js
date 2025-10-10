@@ -17,6 +17,7 @@ export const companyService = {
   applyForJob,
   saveJob,
   removeSavedJob,
+  hireCandidate,
 };
 
 async function getMyJobs() {
@@ -85,4 +86,8 @@ async function saveJob(jobId) {
 
 async function removeSavedJob(jobId) {
   return apiCall("post", `/jobs/remove-saved-job/${jobId}`);
+}
+
+async function hireCandidate(data) {
+  return apiCall("post", "/jobs/hire-candidate", data);
 }

@@ -42,10 +42,10 @@ function Applications() {
         resume: app.resume
       }));
       
-      // Show all applications for debugging - no filtering
-      const applications = allApplications; // .filter(app => 
-      //   app.status === 'pending' || app.status === 'applied' || app.status === 'reviewed'
-      // );
+      // Filter to show only pending/applied applications (not shortlisted, hired, or rejected)
+      const applications = allApplications.filter(app => 
+        app.status === 'pending' || app.status === 'applied' || app.status === 'reviewed'
+      );
       
       console.log("All applications:", allApplications.length);
       console.log("Filtered applications (active):", applications.length);

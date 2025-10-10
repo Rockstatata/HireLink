@@ -6,7 +6,8 @@ export const messageService = {
   getMyMessages,
   markMessageAsRead,
   markAllMessagesAsRead,
-  getUnreadMessageCount
+  getUnreadMessageCount,
+  sendMessageResponse
 };
 
 async function sendMessage(data) {
@@ -31,4 +32,8 @@ async function markAllMessagesAsRead() {
 
 async function getUnreadMessageCount() {
   return apiCall("get", "/messages/unread-count");
+}
+
+async function sendMessageResponse(messageId, responseData) {
+  return apiCall("post", `/messages/${messageId}/respond`, responseData);
 }

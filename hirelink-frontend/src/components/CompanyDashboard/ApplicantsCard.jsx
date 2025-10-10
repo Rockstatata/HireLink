@@ -26,15 +26,18 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
   // Safe destructuring with fallbacks - backend maps jobSeekerProfile to userProfile
   const userProfile = applicantProfile?.userProfile || {};
   
-  // Try multiple sources for profile picture - User model first, then jobSeekerProfile
+  // Try multiple sources for profile picture - User model first, then applicantProfile direct
   const profilePicture = applicantProfile?.profilePicture || 
                         userProfile?.profilePicture || 
+                        applicantProfile?.userProfile?.profilePicture ||
                         "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
 
-  // Enhanced debugging and better profile picture handling - reduced logging
-  if (profilePicture.includes('Default_pfp.svg')) {
-    console.log("Using default profile picture for:", userProfile?.name || 'Unknown');
-  }
+  // Enhanced debugging for profile picture - reduced logging
+  console.log("Profile picture sources for", applicantProfile?.name || 'Unknown', {
+    applicantProfile_profilePicture: applicantProfile?.profilePicture,
+    userProfile_profilePicture: userProfile?.profilePicture,
+    final_profilePicture: profilePicture
+  });
 
   const {
     bio = "No bio available",
@@ -88,6 +91,23 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
     } catch (error) {
       console.log("Error shortlisting candidate:", error);
       alert("Failed to shortlist candidate. Please try again.");
+    }
+  };
+
+  const hireCandidate = async () => {
+    try {
+      const confirmHire = window.confirm(`Are you sure you want to hire ${name}? This will delete the application.`);
+      if (!confirmHire) return;
+      
+      await companyService.hireCandidate({
+        jobId: jobDetails._id,
+        applicantId: applicantProfile._id,
+      });
+      alert(`${name} has been hired successfully!`);
+      fetchApplications();
+    } catch (error) {
+      console.log("Error hiring candidate:", error);
+      alert("Failed to hire candidate. Please try again.");
     }
   };
 
@@ -329,8 +349,15 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
             {isShortlisted ? (
               <>
                 <button
+                  onClick={hireCandidate}
+                  className="py-2 px-3 bg-success text-white text-xs font-medium rounded-lg hover:bg-success/80 transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-check"></i>
+                  Hire
+                </button>
+                <button
                   onClick={removeShortlistedCandidate}
-                  className="py-2 px-3 bg-error text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
+                  className="py-2 px-3 bg-error text-white text-xs font-medium rounded-lg hover:bg-error/80 transition-colors flex items-center justify-center gap-1"
                 >
                   <i className="fa-solid fa-times"></i>
                   Remove
@@ -354,7 +381,7 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
                 </button>
                 <button
                   onClick={shortlistCandidate}
-                  className="py-2 px-3 bg-warning text-white text-xs font-medium rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-1"
+                  className="py-2 px-3 bg-warning text-white text-xs font-medium rounded-lg hover:bg-warning/80 transition-colors flex items-center justify-center gap-1"
                 >
                   <i className="fa-solid fa-star"></i>
                   Shortlist

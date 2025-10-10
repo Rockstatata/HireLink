@@ -152,7 +152,7 @@ function Dashboard() {
 
         <div className="bg-white rounded-xl border shadow-md p-4 hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
-            <div className="rounded-full h-12 w-12 p-2 bg-blue-500 flex justify-center items-center text-white">
+            <div className="rounded-full h-12 w-12 p-2 bg-primary flex justify-center items-center text-white">
               <i className="fa-solid fa-envelope text-lg"></i>
             </div>
             <div className="flex flex-col justify-center">
@@ -184,7 +184,7 @@ function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-900">Recent Applications</h3>
             <Link
               to="/dashboard/applications"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-primary hover:text-primary-dark font-medium"
             >
               View All
             </Link>
@@ -209,9 +209,9 @@ function Dashboard() {
                       <div className="flex items-center space-x-3 text-xs text-gray-500">
                         <span>{new Date(application.createdAt || application.appliedAt).toLocaleDateString()}</span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          application.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          application.status === 'shortlisted' ? 'bg-green-100 text-green-800' :
-                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          application.status === 'pending' ? 'bg-warning/10 text-warning' :
+                          application.status === 'shortlisted' ? 'bg-success/10 text-success' :
+                          application.status === 'rejected' ? 'bg-error/10 text-error' :
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {application.status || 'Pending'}
@@ -239,8 +239,8 @@ function Dashboard() {
               to="/dashboard/post-job"
               className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                <i className="fas fa-plus text-blue-600"></i>
+              <div className="p-2 bg-primary/10 rounded-lg mr-3">
+                <i className="fas fa-plus text-primary"></i>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Post New Job</h4>
@@ -252,8 +252,8 @@ function Dashboard() {
               to="/dashboard/applications"
               className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <div className="p-2 bg-green-100 rounded-lg mr-3">
-                <i className="fas fa-users text-green-600"></i>
+              <div className="p-2 bg-success/10 rounded-lg mr-3">
+                <i className="fas fa-users text-success"></i>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Review Applications</h4>
@@ -265,8 +265,8 @@ function Dashboard() {
               to="/dashboard/messages"
               className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <div className="p-2 bg-yellow-100 rounded-lg mr-3">
-                <i className="fas fa-envelope text-yellow-600"></i>
+              <div className="p-2 bg-warning/10 rounded-lg mr-3">
+                <i className="fas fa-envelope text-warning"></i>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Messages</h4>
@@ -278,8 +278,8 @@ function Dashboard() {
               to="/dashboard/profile"
               className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                <i className="fas fa-building text-purple-600"></i>
+              <div className="p-2 bg-success/10 rounded-lg mr-3">
+                <i className="fas fa-building text-success"></i>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">Company Profile</h4>

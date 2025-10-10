@@ -534,11 +534,11 @@ function JobPosting() {
               <label className="font-medium flex gap-2">
                 <span>
                   Skills
-                  <span className="text-gray-500">*</span>
+                  <span className="text-text-secondary">*</span>
                 </span>
               </label>
 
-              <span className="text-gray-500 text-sm ml-1.5 ">
+              <span className="text-text-secondary text-sm ml-1.5 ">
                 Input job's required skills from the dropdown in the 'Skills'
                 field.
               </span>
@@ -547,7 +547,7 @@ function JobPosting() {
                 setSelectedSkills={setSelectedSkills}
               />
               {errors.skills && (
-                <p className="mt-1 text-sm text-red-600">{errors.skills}</p>
+                <p className="mt-1 text-sm text-error">{errors.skills}</p>
               )}
             </div>
 
@@ -588,7 +588,7 @@ function JobPosting() {
 
             <div className="flex flex-col space-y-2">
               <span className="font-semibold text-lg">Work Mode</span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-text-secondary">
                 Please select your preferred work mode
               </span>
               <div className="flex space-x-4">
@@ -701,7 +701,7 @@ function JobPosting() {
                 />
               </div>
               {errors.salary && (
-                <p className="mt-1 text-sm text-red-600">{errors.salary}</p>
+                <p className="mt-1 text-sm text-error">{errors.salary}</p>
               )}
 
               <div>

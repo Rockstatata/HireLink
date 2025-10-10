@@ -195,11 +195,50 @@ const getUnreadMessageCount = asyncHandler(async (req, res) => {
   );
 });
 
+// Send a response to a message
+const sendMessageResponse = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+  const { content, subject } = req.body;
+  const from = req.user._id;
+
+  // Get the original message
+  const originalMessage = await Message.findById(messageId);
+  if (!originalMessage) {
+    throw new ApiError(404, "Original message not found");
+  }
+
+  // Verify user is the recipient of the original message
+  if (originalMessage.to.toString() !== from.toString()) {
+    throw new ApiError(403, "You can only respond to messages sent to you");
+  }
+
+  // Create response message
+  const responseMessage = await Message.create({
+    from,
+    to: originalMessage.from,
+    type: "response",
+    subject: subject || `Re: ${originalMessage.subject}`,
+    content,
+    relatedJob: originalMessage.relatedJob,
+    relatedApplication: originalMessage.relatedApplication
+  });
+
+  const populatedResponse = await Message.findById(responseMessage._id)
+    .populate('from', 'name email')
+    .populate('to', 'name email')
+    .populate('relatedJob', 'title');
+
+  return res.status(201).json(
+    new ApiResponse(201, populatedResponse, "Response sent successfully")
+  );
+});
+
 export {
   sendMessage,
   sendChatRequest,
   getMyMessages,
   markMessageAsRead,
   markAllMessagesAsRead,
-  getUnreadMessageCount
+  getUnreadMessageCount,
+  sendMessageResponse
 };

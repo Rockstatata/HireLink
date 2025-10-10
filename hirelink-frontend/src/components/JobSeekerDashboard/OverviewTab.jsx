@@ -58,19 +58,19 @@ function OverviewTab() {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed': return 'bg-blue-100 text-blue-800';
-      case 'shortlisted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'hired': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-warning/10 text-warning';
+      case 'reviewed': return 'bg-primary/10 text-primary';
+      case 'shortlisted': return 'bg-success/10 text-success';
+      case 'rejected': return 'bg-error/10 text-error';
+      case 'hired': return 'bg-success/10 text-success';
+      default: return 'bg-neutral-100 text-neutral-800';
     }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -80,19 +80,19 @@ function OverviewTab() {
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-primary/90 to-primary-light/90 rounded-lg p-6 text-white mb-6">
         <h1 className="text-2xl font-bold mb-2">Welcome to Your Dashboard!</h1>
-        <p className="text-blue-100">Track your job search progress and stay organized.</p>
+        <p className="text-text-inverse/80">Track your job search progress and stay organized.</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div className="bg-white rounded-xl shadow-md p-4 border border-neutral-200 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-[var(--color-primary)] text-white">
               <i className="fas fa-paper-plane text-lg"></i>
             </div>
             <div className="ml-4">
-              <h3 className="text-xl font-bold text-gray-900">{stats.applications}</h3>
-              <p className="text-sm text-gray-600">Applications</p>
+              <h3 className="text-xl font-bold text-neutral-900">{stats.applications}</h3>
+              <p className="text-sm text-neutral-600">Applications</p>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@ function OverviewTab() {
 
         <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-500 text-white">
+            <div className="p-3 rounded-full bg-success text-white">
               <i className="fas fa-check-circle text-lg"></i>
             </div>
             <div className="ml-4">
@@ -135,7 +135,7 @@ function OverviewTab() {
 
         <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-500 text-white">
+            <div className="p-3 rounded-full bg-error text-white">
               <i className="fas fa-envelope text-lg"></i>
             </div>
             <div className="ml-4">
@@ -155,7 +155,7 @@ function OverviewTab() {
               <h2 className="text-lg font-semibold text-gray-900">Recent Applications</h2>
               <Link
                 to="/jobseeker/applications"
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-primary hover:text-primary-dark font-medium"
               >
                 View All
               </Link>
@@ -168,7 +168,7 @@ function OverviewTab() {
                 <p className="mb-4">No applications yet</p>
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors"
                 >
                   <i className="fas fa-search mr-2"></i>
                   Browse Jobs
@@ -210,7 +210,7 @@ function OverviewTab() {
               <h2 className="text-lg font-semibold text-gray-900">Recent Messages</h2>
               <Link
                 to="/messages"
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-primary hover:text-primary-dark font-medium"
               >
                 View All
               </Link>
@@ -226,7 +226,7 @@ function OverviewTab() {
             ) : (
               <div className="space-y-4">
                 {recentMessages.map((message) => (
-                  <div key={message._id} className={`border rounded-lg p-4 hover:bg-gray-50 transition-colors ${!message.isRead ? 'bg-blue-50 border-blue-200' : ''}`}>
+                  <div key={message._id} className={`border rounded-lg p-4 hover:bg-neutral-50 transition-colors ${!message.isRead ? 'bg-primary/5 border-primary/20' : ''}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -234,7 +234,7 @@ function OverviewTab() {
                             {message.subject || 'New Message'}
                           </h3>
                           {!message.isRead && (
-                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            <span className="bg-error text-white text-xs px-2 py-1 rounded-full">
                               New
                             </span>
                           )}
@@ -266,8 +266,8 @@ function OverviewTab() {
             to="/jobs"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="p-2 bg-blue-100 rounded-lg mr-3">
-              <i className="fas fa-search text-blue-600"></i>
+            <div className="p-2 bg-primary/10 rounded-lg mr-3">
+              <i className="fas fa-search text-primary"></i>
             </div>
             <div>
               <h3 className="font-medium text-gray-900">Find Jobs</h3>
@@ -279,8 +279,8 @@ function OverviewTab() {
             to="/profile"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="p-2 bg-green-100 rounded-lg mr-3">
-              <i className="fas fa-user text-green-600"></i>
+            <div className="p-2 bg-success/10 rounded-lg mr-3">
+              <i className="fas fa-user text-success"></i>
             </div>
             <div>
               <h3 className="font-medium text-gray-900">Update Profile</h3>
@@ -292,8 +292,8 @@ function OverviewTab() {
             to="/saved-jobs"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="p-2 bg-yellow-100 rounded-lg mr-3">
-              <i className="fas fa-bookmark text-yellow-600"></i>
+            <div className="p-2 bg-warning/10 rounded-lg mr-3">
+              <i className="fas fa-bookmark text-warning"></i>
             </div>
             <div>
               <h3 className="font-medium text-gray-900">Saved Jobs</h3>
@@ -305,8 +305,8 @@ function OverviewTab() {
             to="/companies"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="p-2 bg-purple-100 rounded-lg mr-3">
-              <i className="fas fa-building text-purple-600"></i>
+            <div className="p-2 bg-success/10 rounded-lg mr-3">
+              <i className="fas fa-building text-success"></i>
             </div>
             <div>
               <h3 className="font-medium text-gray-900">Companies</h3>

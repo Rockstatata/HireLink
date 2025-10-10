@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { messageService } from '../services/messageService';
+import { useSelector } from 'react-redux';
 
 function Messages() {
+  const { userData } = useSelector((store) => store.auth);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
+  const [responseTexts, setResponseTexts] = useState({});
+  const [respondingTo, setRespondingTo] = useState(null);
   const [filter, setFilter] = useState({
     type: 'all',
     isRead: 'all',
@@ -84,11 +88,11 @@ function Messages() {
   const getMessageTypeColor = (type) => {
     switch (type) {
       case 'chat_request':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       case 'application_update':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/10 text-success';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-text-secondary';
     }
   };
 
@@ -108,6 +112,35 @@ function Messages() {
 
   const handlePageChange = (newPage) => {
     setFilter(prev => ({ ...prev, page: newPage }));
+  };
+
+  const sendResponse = async (messageId) => {
+    const responseText = responseTexts[messageId];
+    if (!responseText || !responseText.trim()) {
+      alert('Please enter a response message.');
+      return;
+    }
+
+    try {
+      await messageService.sendMessageResponse(messageId, {
+        content: responseText,
+        subject: 'Re: Message Acknowledgment'
+      });
+      
+      alert('Response sent successfully!');
+      setResponseTexts(prev => ({ ...prev, [messageId]: '' }));
+      setRespondingTo(null);
+      
+      // Optionally refresh messages to show updated state
+      fetchMessages();
+    } catch (error) {
+      console.error('Error sending response:', error);
+      alert('Failed to send response. Please try again.');
+    }
+  };
+
+  const handleResponseTextChange = (messageId, text) => {
+    setResponseTexts(prev => ({ ...prev, [messageId]: text }));
   };
 
   return (
@@ -237,8 +270,48 @@ function Messages() {
                         Mark as Read
                       </button>
                     )}
+                    {userData?.role === 'jobSeeker' && message.type === 'chat_request' && (
+                      <button
+                        onClick={() => setRespondingTo(respondingTo === message._id ? null : message._id)}
+                        className="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark transition-colors"
+                      >
+                        {respondingTo === message._id ? 'Cancel' : 'Respond'}
+                      </button>
+                    )}
                   </div>
                 </div>
+                
+                {/* Response form for job seekers */}
+                {userData?.role === 'jobSeeker' && respondingTo === message._id && (
+                  <div className="mt-4 p-3 border-t border-neutral-200">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-medium text-text-secondary">
+                        Send a response to acknowledge this message:
+                      </label>
+                      <textarea
+                        value={responseTexts[message._id] || ''}
+                        onChange={(e) => handleResponseTextChange(message._id, e.target.value)}
+                        placeholder="Type your response here..."
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm resize-none focus:outline-none focus:border-primary"
+                        rows="3"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => setRespondingTo(null)}
+                          className="px-3 py-1 text-xs border border-neutral-300 rounded text-neutral-600 hover:bg-neutral-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => sendResponse(message._id)}
+                          className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary-dark"
+                        >
+                          Send Response
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))
