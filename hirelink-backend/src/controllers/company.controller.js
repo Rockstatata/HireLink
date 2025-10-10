@@ -3,6 +3,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Job } from "../models/job.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import { Application } from "../models/application.model.js";
+import { matchCandidates } from "../utils/openAi.service.js";
 const getAllJobListings = asyncHandler(async (req, res) => {
   const { _id, role } = req.user;
   if (role !== "employer") {
@@ -282,6 +284,29 @@ const removeFromShortlist = asyncHandler(async (req, res) => {
     );
 });
 
+// AI-powered candidate matching for employers
+const getCandidateMatches = asyncHandler(async (req, res) => {
+  const { jobId } = req.params;
+  const userId = req.user._id;
+
+  const job = await Job.findById(jobId);
+  if (!job || job.postedBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "Unauthorized or job not found");
+  }
+
+  // Get applicants from Application model
+  const applications = await Application.find({ job: jobId, status: { $ne: 'rejected' } })
+    .populate('applicant', 'name email userProfile');
+
+  const applicants = applications.map(app => app.applicant);
+
+  const matches = await matchCandidates(job, applicants);
+
+  return res.status(200).json(
+    new ApiResponse(200, matches, "Candidate matches generated successfully")
+  );
+});
+
 export {
   getAllJobListings,
   getAllApplications,
@@ -291,4 +316,5 @@ export {
   removeFromApplications,
   shortlistCandidate,
   removeFromShortlist,
+  getCandidateMatches,
 };

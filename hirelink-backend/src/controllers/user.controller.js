@@ -10,6 +10,7 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.service.js";
+import { analyzeSkillGaps } from "../utils/openAi.service.js";
 
 const cookieOptions = {
   httpOnly: true,
@@ -416,6 +417,28 @@ const updateResume = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Resume updated successfully"));
 });
 
+// AI-powered skill gap analysis
+const analyzeSkillGap = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { jobId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user || user.role !== 'jobSeeker') {
+    throw new ApiError(403, 'Only job seekers can analyze skill gaps');
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new ApiError(404, 'Job not found');
+  }
+
+  const analysis = await analyzeSkillGaps(user.userProfile, job);
+
+  return res.status(200).json(
+    new ApiResponse(200, analysis, 'Skill gap analysis completed successfully')
+  );
+});
+
 // Testing endpoints
 const ping = (req, res) => {
   res.send("User API is working");
@@ -452,5 +475,6 @@ export {
   addSkill,
   removeSkill,
   updateResume,
-  userPublicProfile
+  userPublicProfile,
+  analyzeSkillGap
 };
