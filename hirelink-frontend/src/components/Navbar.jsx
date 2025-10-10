@@ -79,8 +79,18 @@ const Navbar = () => {
                       onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                       className="flex items-center text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
                     >
-                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mr-2">
-                        {userData.name?.charAt(0)?.toUpperCase()}
+                      <div className="w-8 h-8 rounded-full overflow-hidden mr-2 border-2 border-white/30">
+                        {userData.userProfile?.profilePicture || userData.userProfile?.companyLogo ? (
+                          <img
+                            src={userData.userProfile?.profilePicture || userData.userProfile?.companyLogo}
+                            alt={userData.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                            {userData.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       {userData.name}
                       <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +100,7 @@ const Navbar = () => {
                     {showProfileDropdown && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                         <Link
-                          to={userData.role === 'employer' ? '/dashboard/home' : '/jobseeker/profile'}
+                          to={userData.role === 'employer' ? '/dashboard/home' : '/my-dashboard'}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setShowProfileDropdown(false)}
                         >
@@ -190,7 +200,7 @@ const Navbar = () => {
           {userData ? (
             <>
               <Link
-                to={userData.role === 'employer' ? '/dashboard/home' : '/jobseeker/profile'}
+                to={userData.role === 'employer' ? '/dashboard/home' : '/my-dashboard'}
                 className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
               >
                 Dashboard

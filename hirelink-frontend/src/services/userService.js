@@ -37,6 +37,7 @@ export const userService = {
   addEducation,
   updateEducation,
   deleteEducation,
+  changePassword,
 };
 
 async function login(userData) {
@@ -139,5 +140,10 @@ async function updateEducation(educationId, educationData) {
 
 async function deleteEducation(educationId) {
   const response = await apiCall.delete(`/users/education/${educationId}`);
+  return response.data;
+}
+
+async function changePassword(data) {
+  const response = await apiCall.post("/users/change-password", data);
   return response.data;
 }

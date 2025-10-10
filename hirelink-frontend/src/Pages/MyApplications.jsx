@@ -1,14 +1,14 @@
 import React from 'react';
-import SavedJobsTab from '../components/JobSeekerDashboard/SavedJobsTab';
+import ApplicationsTab from '../components/JobSeekerDashboard/ApplicationsTab';
 
-function SavedJobs() {
+function MyApplications() {
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
       <div className="container mx-auto px-4 py-8">
-        <SavedJobsTab />
+        <ApplicationsTab />
       </div>
     </div>
   );
 }
 
-export default SavedJobs;
+export default MyApplications;

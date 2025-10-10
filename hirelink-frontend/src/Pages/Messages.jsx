@@ -19,11 +19,12 @@ function Messages() {
       console.log('Fetching messages with filter:', filter);
       const response = await messageService.getMyMessages(filter);
       console.log('Messages response:', response);
-      setMessages(response.data.messages);
-      setPagination(response.data.pagination);
+      setMessages(response.data?.messages || response.messages || []);
+      setPagination(response.data?.pagination || response.pagination || {});
     } catch (error) {
       console.error('Error fetching messages:', error);
-      alert('Failed to fetch messages');
+      setMessages([]);
+      setPagination({});
     } finally {
       setLoading(false);
     }
@@ -32,9 +33,10 @@ function Messages() {
   const fetchUnreadCount = async () => {
     try {
       const response = await messageService.getUnreadMessageCount();
-      setUnreadCount(response.data.unreadCount);
+      setUnreadCount(response.data?.unreadCount || response.unreadCount || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     }
   };
 

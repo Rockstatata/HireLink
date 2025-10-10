@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import EditProfile from "../components/UserProfile/EditProfile";
 import UpdateResume from "../components/UserProfile/UpdateResume";
+import ChangePassword from "../components/UserProfile/ChangePassword";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 function UserProfile() {
-  const { status, userData } = useSelector((store) => store.auth);
+  const { userData } = useSelector((store) => store.auth);
+  const [selectedSection, setSelectedSection] = useState("editProfile");
+  const navigate = useNavigate();
 
   if (userData.role === "employer") {
     return <Navigate to="/" />;
   }
-  const [selectedSection, setSelectedSection] = useState("editProfile");
 
   const switchSection = (section) => {
     setSelectedSection(section);
   };
-
-  const navigate = useNavigate();
 
   const openPublicProfile = () => {
     navigate(`/user/${userData._id}`);
@@ -50,6 +50,16 @@ function UserProfile() {
             >
               Resume / CV
             </div>
+            <div
+              className={`hover:cursor-pointer text-text-secondary transition-colors duration-200 ${
+                selectedSection === "password"
+                  ? "text-primary font-medium border-b-2 border-primary"
+                  : "hover:border-b-2 hover:border-primary-light"
+              } pb-3 hover:text-primary`}
+              onClick={() => switchSection("password")}
+            >
+              Change Password
+            </div>
           </div>
 
           <div
@@ -63,6 +73,7 @@ function UserProfile() {
       <div className="border border-neutral-200 my-5 rounded-lg shadow-sm bg-white">
         {selectedSection === "editProfile" && <EditProfile />}
         {selectedSection === "resume" && <UpdateResume />}
+        {selectedSection === "password" && <ChangePassword />}
       </div>
     </div>
   );

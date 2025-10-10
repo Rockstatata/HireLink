@@ -16,6 +16,7 @@ import {
   updateResume,
   userPublicProfile,
   analyzeSkillGap,
+  changePassword,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -40,5 +41,6 @@ router.route("/resume").post(verifyJWT, updateResume);
 router.route("/saved-jobs").get(verifyJWT, getSavedJobs);
 router.route("/public-profile/:id").get(userPublicProfile);
 router.route("/skill-gap/:jobId").get(verifyJWT, analyzeSkillGap);
+router.route("/change-password").post(verifyJWT, changePassword);
 
 export default router;

@@ -104,15 +104,22 @@ function DashboardSidebar() {
       </div>
       <div className="ie-user hidden items-center gap-3 px-3 xl:flex">
         <div className="h-10 w-10 rounded-full p-px overflow-hidden border">
-          <img
-            src={userData?.userProfile?.companyLogo}
-            alt={`${userData?.userProfile?.companyName} Logo`}
-          />
+          {userData?.userProfile?.companyLogo ? (
+            <img
+              src={userData.userProfile.companyLogo}
+              alt={`${userData?.userProfile?.companyName} Logo`}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full">
+              <i className="fas fa-building text-gray-400"></i>
+            </div>
+          )}
         </div>
         <div className="ie-userDetails">
           <div className="flex justify-between gap-2">
             <span className="text-base font-semibold text-[var(--color-text-secondary)]">
-              {userData?.userProfile?.companyName}
+              {userData?.userProfile?.companyName || userData?.name}
             </span>
             <div className="group flex cursor-pointer items-center gap-1 rounded-full bg-[var(--color-neutral-100)] px-2 py-1 transition-all hover:bg-[var(--color-neutral-50)]">
               <span
@@ -123,7 +130,7 @@ function DashboardSidebar() {
               </span>
             </div>
           </div>
-          <span className="mt-1 block text-sm font-medium text-[var(--color-text-secondary)]">            Logged in as {userData?.username}
+          <span className="mt-1 block text-sm font-medium text-[var(--color-text-secondary)]">
             Logged in as {userData?.username}
           </span>
         </div>

@@ -17,6 +17,8 @@ import Companies from "../Pages/Companies";
 import UserProfile from "../Pages/UserProfile";
 import UserPublicProfile from "../Pages/UserPublicProfile";
 import Messages from "../Pages/Messages";
+import SavedJobs from "../Pages/SavedJobs";
+import MyApplications from "../Pages/MyApplications";
 
 
 
@@ -36,9 +38,9 @@ function AllRoutes() {
       
       {/* Job Seeker Dashboard Routes */}
       <Route path="/my-dashboard" element={<PrivateRoutes><JobSeekerDashboard /></PrivateRoutes>} />
-      <Route path="/jobseeker/profile" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
-      <Route path="/jobseeker/jobs" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
-      <Route path="/jobseeker/applications" element={<PrivateRoutes><Dashboard /></PrivateRoutes>} />
+      <Route path="/my-dashboard/*" element={<PrivateRoutes><JobSeekerDashboard /></PrivateRoutes>} />
+      <Route path="/jobseeker/applications" element={<PrivateRoutes><MyApplications /></PrivateRoutes>} />
+      <Route path="/saved-jobs" element={<PrivateRoutes><SavedJobs /></PrivateRoutes>} />
 
       {/* Company Dashboard Routes */}
       <Route
