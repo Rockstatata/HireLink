@@ -75,17 +75,17 @@ async function updateResume(resume) {
 }
 
 async function saveJob(id) {
-  const response = await apiCall.post(`/save/${id}`);
+  const response = await apiCall.post(`/jobs/save/${id}`, {});
   return response.data;
 }
 
 async function applyForJob(id) {
-  const response = await apiCall.post(`/apply/${id}`);
+  const response = await apiCall.post(`/jobs/apply/${id}`, {});
   return response.data;
 }
 
 async function removeSavedJob(jobId) {
-  const response = await apiCall.delete(`/remove-saved-job/${jobId}`);
+  const response = await apiCall.post(`/jobs/remove-saved-job/${jobId}`);
   return response.data;
 }
 

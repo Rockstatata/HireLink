@@ -352,49 +352,76 @@ const sendJobDescription = asyncHandler(async (req, res) => {
 });
 
 const applyForJob = asyncHandler(async (req, res) => {
+  console.log("=== Apply for Job Debug ===");
+  console.log("User:", req.user?._id, "Role:", req.user?.role);
+  console.log("Job ID:", req.params.id);
+  console.log("Request body:", req.body);
+  
   const { role, _id } = req.user;
   const jobId = req.params.id;
-  const { coverLetter, resume } = req.body;
+  
+  // Handle case where req.body might be undefined or empty
+  const { coverLetter = "", resume = "" } = req.body || {};
 
   if (role !== "jobSeeker") {
+    console.log("Role check failed. User role:", role);
     throw new ApiError(403, "Only job seekers can apply for jobs");
   }
 
+  console.log("Looking for job with ID:", jobId);
   const job = await Job.findById(jobId);
   if (!job) {
+    console.log("Job not found for ID:", jobId);
     throw new ApiError(404, "Job not found");
   }
 
+  console.log("Job found:", job.title, "Active:", job.isActive);
   if (!job.isActive) {
     throw new ApiError(400, "This job is no longer accepting applications");
   }
 
   // Check if user already applied using Application model
+  console.log("Checking for existing application...");
   const existingApplication = await Application.findOne({ job: jobId, applicant: _id });
   if (existingApplication) {
+    console.log("User already applied. Application ID:", existingApplication._id);
+    throw new ApiError(400, "You have already applied for this job");
+  }
+
+  // Also check if user is already in job.applicants array
+  const alreadyInJobApplicants = job.applicants.some(applicant => 
+    applicant.user.toString() === _id.toString()
+  );
+  if (alreadyInJobApplicants) {
+    console.log("User already in job applicants array");
     throw new ApiError(400, "You have already applied for this job");
   }
 
   // Create application document
+  console.log("Creating new application...");
   const application = await Application.create({
     job: jobId,
     applicant: _id,
-    coverLetter: coverLetter || "",
-    resume: resume || "",
+    coverLetter: coverLetter,
+    resume: resume,
+    status: "pending", // Use correct enum value for Application model
   });
+  console.log("Application created:", application._id);
 
   // Also add to Job.applicants for backward compatibility
+  console.log("Adding to job applicants...");
   job.applicants.push({
     user: _id,
-    coverLetter: coverLetter || "",
-    resume: resume || "",
-    status: "pending",
+    coverLetter: coverLetter,
+    status: "applied", // Use correct enum value for Job model
     appliedAt: new Date(),
   });
 
   job.applicationCount += 1;
   await job.save();
+  console.log("Job updated. New application count:", job.applicationCount);
 
+  console.log("=== Apply for Job Success ===");
   return res.status(200).json(
     new ApiResponse(200, { application }, "Job applied successfully")
   );
