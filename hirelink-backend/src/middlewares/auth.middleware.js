@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/ApiError.js"; // Assuming this is your custom error class
-import { asyncHandler } from "../utils/asyncHandler.js"; // Assuming this is your async wrapper
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
     try {

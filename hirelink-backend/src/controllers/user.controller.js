@@ -10,14 +10,14 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.service.js";
-import { analyzeSkillGaps } from "../utils/openAi.service.js";
+import { analyzeSkillGaps as analyzeSkillGapsAI } from "../utils/openAi.service.js";
 
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 1000 * 60 * 60 * 24 * 7,
-  domain: process.env.NODE_ENV === "production" ? "noobnarayan.in" : "localhost",
+  domain: process.env.NODE_ENV === "production" ? "noobnarayan.in" : undefined,
 };
 
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -143,9 +143,15 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
-    .select("-password -refreshToken")
-    .populate('jobSeekerProfile')
-    .populate('companyProfile');
+    .select("-password -refreshToken");
+
+  // Populate profiles if they exist
+  if (user.jobSeekerProfile) {
+    await user.populate('jobSeekerProfile');
+  }
+  if (user.companyProfile) {
+    await user.populate('companyProfile');
+  }
 
   return res.status(200).json(new ApiResponse(200, { user }, "Current user fetched successfully"));
 });
@@ -432,7 +438,7 @@ const analyzeSkillGap = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Job not found');
   }
 
-  const analysis = await analyzeSkillGaps(user.userProfile, job);
+  const analysis = await analyzeSkillGapsAI(user.userProfile, job);
 
   return res.status(200).json(
     new ApiResponse(200, analysis, 'Skill gap analysis completed successfully')

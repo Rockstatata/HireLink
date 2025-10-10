@@ -29,7 +29,7 @@ const router = Router();
 
 // Public routes
 router.route("/ping").get(ping);
-router.route("/jobs").get(getJobs);
+router.route("/jobs").get(getJobs).post(verifyJWT, createJob);
 router.route("/jobs/:id").get(getJobById);
 router.route("/job-locations").get(getJobLocations);
 router.route("/companies").get(getCompanies);
@@ -38,7 +38,6 @@ router.route("/companies").get(getCompanies);
 router.route("/auth-ping").get(verifyJWT, authPing);
 
 // Employer routes
-router.route("/jobs").post(verifyJWT, createJob);
 router.route("/post-job").post(verifyJWT, postJob); // Legacy route for compatibility
 router.route("/my-jobs").get(verifyJWT, getMyJobs);
 router.route("/my-company-applications").get(verifyJWT, getMyCompanyApplications);

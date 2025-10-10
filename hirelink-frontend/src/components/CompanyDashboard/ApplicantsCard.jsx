@@ -3,19 +3,32 @@ import { companyService } from "../../services/companyService";
 import { useNavigate } from "react-router-dom";
 
 function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
+  const navigate = useNavigate();
+
+  // Add safety checks for data structure
+  if (!data || !data.applicantProfile) {
+    return (
+      <div className="rounded border shadow py-3.5 px-4 flex items-center justify-center">
+        <p className="text-gray-500">No applicant data available</p>
+      </div>
+    );
+  }
+
   const { applicantProfile, jobDetails } = data;
+  
+  // Safe destructuring with fallbacks
+  const userProfile = applicantProfile?.userProfile || {};
   const {
-    profilePicture,
-    name,
-    bio,
-    skills,
-    education,
-    workExperience,
-    address,
-    yearsOfExperience,
-    resume,
-    socialProfiles,
-  } = applicantProfile?.userProfile;
+    profilePicture = "https://via.placeholder.com/80",
+    name = "Unknown Applicant",
+    bio = "No bio available",
+    education = [],
+    workExperience = [],
+    address = {},
+    yearsOfExperience = 0,
+    resume = null,
+    socialProfiles = {},
+  } = userProfile;
 
   function formatDate(dateString) {
     const options = { year: "numeric", month: "short" };
@@ -68,8 +81,6 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
       console.log(error);
     }
   };
-
-  const navigate = useNavigate();
 
   const openPublicProfile = () => {
     navigate(`/user/${applicantProfile._id}`);

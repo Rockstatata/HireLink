@@ -27,7 +27,7 @@ router.route("/ping").get(ping);
 router.route("/auth-ping").get(verifyJWT, authPing);
 router.route("/signup").post(registerUser);
 router.route("/login").post(loginUser);
-router.route("/logout").get(verifyJWT, logoutUser);
+router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update-profile").put(verifyJWT, updateUserProfile);
 router.route("/saved-jobs").get(verifyJWT, getSavedJobs);

@@ -2,6 +2,7 @@ import { Job } from "../models/job.model.js";
 import { CompanyProfile } from "../models/companyProfile.model.js";
 import { User } from "../models/user.model.js";
 import { JobSeekerProfile } from "../models/jobSeekerProfile.model.js";
+import { Application } from "../models/application.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";

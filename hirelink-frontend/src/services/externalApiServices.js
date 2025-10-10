@@ -11,6 +11,12 @@ async function getAccessToken() {
   const clientId = import.meta.env.VITE_LIGHTCAST_API_CLIENT_ID;
   const secret = import.meta.env.VITE_LIGHTCAST_API_SECRET;
   const scope = import.meta.env.VITE_LIGHTCAST_API_SCOPE;
+  
+  if (!clientId || !secret || !scope) {
+    console.warn("Lightcast API credentials not configured");
+    return null;
+  }
+  
   try {
     const params = new URLSearchParams();
     params.append("client_id", clientId);
@@ -33,6 +39,7 @@ async function getAccessToken() {
     return response.data.access_token;
   } catch (error) {
     console.error("Failed to fetch access token", error);
+    return null;
   }
 }
 
@@ -40,8 +47,8 @@ async function searchSkills(query) {
   const accessToken = await getAccessToken();
 
   if (!accessToken) {
-    console.error("Failed to fetch access token");
-    return;
+    console.warn("Skills API not available - using fallback mode");
+    return null; // Return null to indicate API is not available
   }
 
   try {
@@ -56,7 +63,8 @@ async function searchSkills(query) {
 
     return response.data.data;
   } catch (error) {
-    console.error("Failed to call API", error);
+    console.error("Failed to call skills API", error);
+    return null; // Return null on error
   }
 }
 

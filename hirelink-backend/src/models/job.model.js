@@ -63,18 +63,22 @@ const jobSchema = new Schema(
     viewCount: { type: Number, default: 0 },
     category: {
       type: String,
-      default: "other", // Added default value
+      default: "technology", // Changed default to technology
       enum: [
         "technology",
+        "software-development",
+        "data-science",
+        "design",
         "marketing",
         "sales",
-        "design",
         "finance",
         "human-resources",
         "operations",
         "customer-service",
         "healthcare",
         "education",
+        "engineering",
+        "consulting",
         "other"
       ],
     },

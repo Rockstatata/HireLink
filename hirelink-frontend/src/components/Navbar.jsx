@@ -50,24 +50,29 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
-                <a
+                
+                {userData && (
+                  <>
+                  <a
                   href="/"
                   className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
                 >
                   Home
                 </a>
-                <a
-                  href="/jobs"
-                  className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Find Jobs
-                </a>
-                <a
-                  href="/companies"
-                  className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Companies
-                </a>
+                    <a
+                      href="/jobs"
+                      className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                    >
+                      Find Jobs
+                    </a>
+                    <a
+                      href="/companies"
+                      className="text-text-inverse hover:text-text-inverse hover:bg-white/20 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105"
+                    >
+                      Companies
+                    </a>
+                  </>
+                )}
                 {userData ? (
                   <div className="relative">
                     <button
@@ -166,18 +171,22 @@ const Navbar = () => {
           >
             Home
           </a>
-          <a
-            href="#"
-            className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
-          >
-            Find Jobs
-          </a>
-          <a
-            href="#"
-            className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
-          >
-            Companies
-          </a>
+          {userData && (
+            <>
+              <a
+                href="#"
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+              >
+                Find Jobs
+              </a>
+              <a
+                href="#"
+                className="text-text-inverse hover:text-text-inverse hover:bg-white/20 block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:scale-105"
+              >
+                Companies
+              </a>
+            </>
+          )}
           {userData ? (
             <>
               <Link
