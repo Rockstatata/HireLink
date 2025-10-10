@@ -32,7 +32,7 @@ async function getAllApplications() {
 }
 
 async function postNewJob(data) {
-  return apiCall("post", "/jobs/jobs", data);
+  return apiCall("post", "/jobs/post-job", data);
 }
 
 async function generateJobDescription(data) {

@@ -23,13 +23,12 @@ function AllRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/jobs" element={<JobListing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      <Route path="/jobs" element={<JobListing />} />
-      <Route path="/jobs/:id" element={<JobDetails />} />
-      <Route path="/companies" element={<Companies />} />
+      <Route path="/jobs" element={<PrivateRoutes><JobListing /></PrivateRoutes>} />
+      <Route path="/jobs/:id" element={<PrivateRoutes><JobDetails /></PrivateRoutes>} />
+      <Route path="/companies" element={<PrivateRoutes><Companies /></PrivateRoutes>} />
 
       <Route path="/user-onboarding" element={<PrivateRoutes><UserOnboarding /></PrivateRoutes>} />
       <Route path="/company-onboarding" element={<PrivateRoutes><CompanyOnboarding /></PrivateRoutes>} />

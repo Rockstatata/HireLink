@@ -7,7 +7,6 @@ import SubmissionButton from "../components/Common/Buttons/SubmissionButton";
 import RadioButton from "../components/Common/FormComponents/RadioButton";
 import SkillsSearch from "../components/Common/SkillsSearch";
 import TextEditor from "../components/Common/FormComponents/TextEditor";
-import Dialogbox from "../components/Dialogbox";
 import { useNavigate } from "react-router-dom";
 import { companyService } from "../services/companyService";
 
@@ -29,7 +28,7 @@ function JobPosting() {
     salary: {
       min: 0,
       max: 0,
-      currency: "INR",
+      currency: "TK",
       negotiable: false
     },
     jobType: "full-time",
@@ -43,12 +42,7 @@ function JobPosting() {
     numberOfOpenings: 1,
   });
 
-  const [dialog, setDialog] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    buttonText: "",
-  });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     setFormData((prevData) => ({
@@ -59,10 +53,30 @@ function JobPosting() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    console.log('Input change:', name, value);
+    
+    if (name === 'experience') {
+      const selectedOption = experienceOptions.find(option => option.value === value);
+      if (selectedOption) {
+        setFormData((prevData) => ({
+          ...prevData,
+          experience: { 
+            min: selectedOption.min, 
+            max: selectedOption.max 
+          }
+        }));
+      }
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
+    
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleCheckboxChange = (e) => {
@@ -85,6 +99,59 @@ function JobPosting() {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.title.trim()) {
+      newErrors.title = "Job title is required";
+    }
+    
+    if (!formData.jobType || formData.jobType === "default") {
+      newErrors.jobType = "Please select a job type";
+    }
+    
+    if (!formData.category) {
+      newErrors.category = "Please select a primary role";
+    }
+    
+    if (!formData.experience || formData.experience.min === undefined) {
+      newErrors.experience = "Please select years of experience";
+    }
+    
+    if (selectedSkills.size === 0) {
+      newErrors.skills = "At least one skill is required";
+    }
+    
+    if (!formData.applicationDeadline) {
+      newErrors.applicationDeadline = "Application deadline is required";
+    }
+    
+    if (!formData.workMode) {
+      newErrors.workMode = "Please select a work mode";
+    }
+    
+    // Validate salary range
+    if (formData.salary.min > 0 && formData.salary.max > 0 && formData.salary.min >= formData.salary.max) {
+      newErrors.salary = "Maximum salary must be greater than minimum salary";
+    }
+    
+    setErrors(newErrors);
+    
+    // Debug logging
+    console.log('Form validation errors:', newErrors);
+    console.log('Form data:', {
+      title: formData.title,
+      jobType: formData.jobType,
+      category: formData.category,
+      experience: formData.experience,
+      skills: selectedSkills.size,
+      applicationDeadline: formData.applicationDeadline,
+      description: formData.description
+    });
+    
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors };
+  };
+
   const handleGenerate = async () => {
     const jobData = { ...formData };
     
@@ -101,12 +168,7 @@ function JobPosting() {
     const missingFields = requiredFields.filter(field => !jobData[field]);
     
     if (missingFields.length > 0) {
-      setDialog({
-        isOpen: true,
-        title: "Incomplete Form",
-        message: `Please fill the following required fields: ${missingFields.join(', ')}`,
-        buttonText: "OK",
-      });
+      alert(`Incomplete Form: Please fill the following required fields: ${missingFields.join(', ')}`);
       return;
     }
     
@@ -121,19 +183,9 @@ function JobPosting() {
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
       if (errorMessage.includes("Quota exceeded")) {
-        setDialog({
-          isOpen: true,
-          title: "Quota Exceeded",
-          message: "Error: Quota exceeded. You reached the limit for free job description generations. An upgrade to the plan is required to continue using this feature.",
-          buttonText: "OK",
-        });
+        alert("Quota Exceeded: You reached the limit for free job description generations. An upgrade to the plan is required to continue using this feature.");
       } else {
-        setDialog({
-          isOpen: true,
-          title: "Error generating job description",
-          message: errorMessage,
-          buttonText: "OK",
-        });
+        alert(`Error generating job description: ${errorMessage}`);
       }
       setGeneratingDescription(false);
     }
@@ -143,6 +195,15 @@ function JobPosting() {
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submitting
+    const validation = validateForm();
+    if (!validation.isValid) {
+      const errorMessages = Object.values(validation.errors).join('\n• ');
+      alert(`Please fix the following errors before submitting:\n\n• ${errorMessages}`);
+      return;
+    }
+    
     setSubmitting(true);
 
     try {
@@ -183,24 +244,18 @@ function JobPosting() {
       });
       
       console.log('Submitting job data:', jobData);
-      await companyService.postNewJob(jobData);
+      const response = await companyService.postNewJob(jobData);
+      console.log('Job posting response:', response);
       
-      setDialog({
-        isOpen: true,
-        title: "Job Posting Successful",
-        message: "Your job posting has been submitted successfully.",
-        buttonText: "View Jobs",
-        onClose: () => navigate("/jobs"),
-      });
+      // Use browser alert instead of Dialogbox
+      alert("Job Posting Successful! Your job posting has been submitted successfully.");
+      navigate("/jobs");
     } catch (error) {
       console.error('Job posting error:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Failed to post job';
-      setDialog({
-        isOpen: true,
-        title: "Error Posting Job",
-        message: errorMessage,
-        buttonText: "Okay",
-      });
+      
+      // Use browser alert instead of Dialogbox
+      alert(`Error Posting Job: ${errorMessage}`);
     }
     setSubmitting(false);
   };
@@ -216,39 +271,193 @@ function JobPosting() {
 
   const roleOptions = [
     {
-      label: "Technical Roles",
+      label: "Technology",
       options: [
-        { value: "software_engineer", label: "Software Engineer" },
-        { value: "data_scientist", label: "Data Scientist" },
-        { value: "system_admin", label: "System Administrator" },
+        { value: "software-development", label: "Software Engineer" },
+        { value: "software-development", label: "Frontend Developer" },
+        { value: "software-development", label: "Backend Developer" },
+        { value: "software-development", label: "Full Stack Developer" },
+        { value: "software-development", label: "Mobile App Developer" },
+        { value: "software-development", label: "DevOps Engineer" },
+        { value: "software-development", label: "QA Engineer" },
+        { value: "software-development", label: "System Administrator" },
+        { value: "data-science", label: "Data Scientist" },
+        { value: "data-science", label: "Data Analyst" },
+        { value: "data-science", label: "Machine Learning Engineer" },
+        { value: "data-science", label: "AI Engineer" },
+        { value: "technology", label: "Product Manager" },
+        { value: "technology", label: "Technical Lead" },
+        { value: "technology", label: "CTO" },
+        { value: "technology", label: "IT Support Specialist" },
+        { value: "technology", label: "Cybersecurity Analyst" },
+        { value: "technology", label: "Network Engineer" },
+        { value: "technology", label: "Database Administrator" },
+        { value: "technology", label: "Cloud Architect" },
+        { value: "technology", label: "Blockchain Developer" },
+        { value: "technology", label: "Game Developer" },
+        { value: "technology", label: "Embedded Systems Engineer" },
       ],
     },
     {
-      label: "Management Roles",
+      label: "Design & Creative",
       options: [
-        { value: "project_manager", label: "Project Manager" },
-        { value: "product_manager", label: "Product Manager" },
-        { value: "team_lead", label: "Team Lead" },
+        { value: "design", label: "UI/UX Designer" },
+        { value: "design", label: "Graphic Designer" },
+        { value: "design", label: "Product Designer" },
+        { value: "design", label: "UX Researcher" },
+        { value: "design", label: "Visual Designer" },
+        { value: "design", label: "Creative Director" },
+        { value: "design", label: "Art Director" },
+        { value: "design", label: "Brand Designer" },
+        { value: "design", label: "Motion Graphics Designer" },
+        { value: "design", label: "Illustrator" },
       ],
     },
     {
-      label: "Design Roles",
+      label: "Marketing & Sales",
       options: [
-        { value: "ui_designer", label: "UI Designer" },
-        { value: "ux_designer", label: "UX Designer" },
-        { value: "graphic_designer", label: "Graphic Designer" },
+        { value: "marketing", label: "Marketing Manager" },
+        { value: "marketing", label: "Digital Marketing Specialist" },
+        { value: "marketing", label: "Content Marketing Manager" },
+        { value: "marketing", label: "SEO Specialist" },
+        { value: "marketing", label: "Social Media Manager" },
+        { value: "marketing", label: "Marketing Analyst" },
+        { value: "marketing", label: "Brand Manager" },
+        { value: "marketing", label: "Public Relations Specialist" },
+        { value: "marketing", label: "Email Marketing Specialist" },
+        { value: "marketing", label: "Growth Hacker" },
+        { value: "sales", label: "Sales Representative" },
+        { value: "sales", label: "Sales Manager" },
+        { value: "sales", label: "Business Development Manager" },
+        { value: "sales", label: "Account Executive" },
+        { value: "sales", label: "Sales Engineer" },
+        { value: "sales", label: "Customer Success Manager" },
+        { value: "sales", label: "Sales Operations Manager" },
+        { value: "sales", label: "Channel Sales Manager" },
+        { value: "sales", label: "Territory Sales Manager" },
+        { value: "sales", label: "Inside Sales Representative" },
+      ],
+    },
+    {
+      label: "Finance & Business",
+      options: [
+        { value: "finance", label: "Financial Analyst" },
+        { value: "finance", label: "Accountant" },
+        { value: "finance", label: "Financial Planner" },
+        { value: "finance", label: "Investment Banker" },
+        { value: "finance", label: "Financial Controller" },
+        { value: "finance", label: "Treasury Analyst" },
+        { value: "finance", label: "Risk Analyst" },
+        { value: "finance", label: "Financial Advisor" },
+        { value: "finance", label: "Auditor" },
+        { value: "finance", label: "Tax Specialist" },
+        { value: "consulting", label: "Business Analyst" },
+        { value: "consulting", label: "Management Consultant" },
+        { value: "consulting", label: "Strategy Consultant" },
+        { value: "consulting", label: "Financial Consultant" },
+      ],
+    },
+    {
+      label: "Human Resources & Operations",
+      options: [
+        { value: "human-resources", label: "HR Manager" },
+        { value: "human-resources", label: "Recruiter" },
+        { value: "human-resources", label: "Talent Acquisition Specialist" },
+        { value: "human-resources", label: "HR Business Partner" },
+        { value: "human-resources", label: "Training Coordinator" },
+        { value: "human-resources", label: "Employee Relations Specialist" },
+        { value: "human-resources", label: "Compensation Analyst" },
+        { value: "human-resources", label: "Benefits Administrator" },
+        { value: "human-resources", label: "HR Generalist" },
+        { value: "human-resources", label: "People Operations Manager" },
+        { value: "operations", label: "Operations Manager" },
+        { value: "operations", label: "Project Manager" },
+        { value: "operations", label: "Program Manager" },
+        { value: "operations", label: "Supply Chain Manager" },
+        { value: "operations", label: "Logistics Coordinator" },
+        { value: "operations", label: "Quality Assurance Manager" },
+        { value: "operations", label: "Process Improvement Specialist" },
+        { value: "operations", label: "Operations Analyst" },
+        { value: "operations", label: "Facility Manager" },
+        { value: "operations", label: "Vendor Manager" },
+      ],
+    },
+    {
+      label: "Customer Service",
+      options: [
+        { value: "customer-service", label: "Customer Service Representative" },
+        { value: "customer-service", label: "Customer Support Specialist" },
+        { value: "customer-service", label: "Technical Support Engineer" },
+        { value: "customer-service", label: "Customer Success Specialist" },
+        { value: "customer-service", label: "Client Services Manager" },
+        { value: "customer-service", label: "Help Desk Technician" },
+        { value: "customer-service", label: "Customer Experience Manager" },
+        { value: "customer-service", label: "Support Operations Manager" },
+        { value: "customer-service", label: "Account Manager" },
+        { value: "customer-service", label: "Relationship Manager" },
+      ],
+    },
+    {
+      label: "Healthcare & Education",
+      options: [
+        { value: "healthcare", label: "Registered Nurse" },
+        { value: "healthcare", label: "Physician" },
+        { value: "healthcare", label: "Pharmacist" },
+        { value: "healthcare", label: "Physical Therapist" },
+        { value: "healthcare", label: "Medical Laboratory Scientist" },
+        { value: "healthcare", label: "Radiologic Technologist" },
+        { value: "healthcare", label: "Occupational Therapist" },
+        { value: "healthcare", label: "Healthcare Administrator" },
+        { value: "healthcare", label: "Medical Assistant" },
+        { value: "healthcare", label: "Nurse Practitioner" },
+        { value: "education", label: "Teacher" },
+        { value: "education", label: "Professor" },
+        { value: "education", label: "School Counselor" },
+        { value: "education", label: "Curriculum Developer" },
+        { value: "education", label: "Educational Administrator" },
+        { value: "education", label: "Instructional Designer" },
+        { value: "education", label: "Librarian" },
+        { value: "education", label: "Education Consultant" },
+        { value: "education", label: "Training Specialist" },
+        { value: "education", label: "Academic Advisor" },
+      ],
+    },
+    {
+      label: "Engineering & Consulting",
+      options: [
+        { value: "engineering", label: "Mechanical Engineer" },
+        { value: "engineering", label: "Electrical Engineer" },
+        { value: "engineering", label: "Civil Engineer" },
+        { value: "engineering", label: "Chemical Engineer" },
+        { value: "engineering", label: "Aerospace Engineer" },
+        { value: "engineering", label: "Biomedical Engineer" },
+        { value: "engineering", label: "Environmental Engineer" },
+        { value: "engineering", label: "Industrial Engineer" },
+        { value: "engineering", label: "Materials Engineer" },
+        { value: "engineering", label: "Structural Engineer" },
+        { value: "consulting", label: "IT Consultant" },
+        { value: "consulting", label: "Technical Consultant" },
+        { value: "consulting", label: "Process Consultant" },
+        { value: "consulting", label: "Change Management Consultant" },
+        { value: "consulting", label: "Legal Consultant" },
+      ],
+    },
+    {
+      label: "Other",
+      options: [
+        { value: "other", label: "Other" },
       ],
     },
   ];
 
   const experienceOptions = [
-    { value: "0", label: "Less than 1 year" },
-    { value: "1", label: "1 year" },
-    { value: "2", label: "2 years" },
-    { value: "3", label: "3 years" },
-    { value: "4", label: "4 years" },
-    { value: "5", label: "5 years" },
-    { value: "6", label: "More than 5 years" },
+    { value: "0", label: "Less than 1 year", min: 0, max: 1 },
+    { value: "1", label: "1 year", min: 1, max: 2 },
+    { value: "2", label: "2 years", min: 2, max: 3 },
+    { value: "3", label: "3 years", min: 3, max: 5 },
+    { value: "4", label: "4 years", min: 4, max: 6 },
+    { value: "5", label: "5 years", min: 5, max: 8 },
+    { value: "6", label: "More than 5 years", min: 5, max: 10 },
   ];
 
   return (
@@ -271,6 +480,7 @@ function JobPosting() {
                 id="title"
                 name="title"
                 onChange={handleInputChange}
+                error={errors.title}
               />
             </div>
 
@@ -281,8 +491,10 @@ function JobPosting() {
                 isRequired={true}
                 id="jobType"
                 name="jobType"
+                value={formData.jobType}
                 options={jobTypeOptions}
                 onChange={handleInputChange}
+                error={errors.jobType}
               />
             </div>
 
@@ -292,10 +504,12 @@ function JobPosting() {
                 description="Select the primary role that the candidate will be expected to perform."
                 id="category"
                 name="category"
+                value={formData.category}
                 options={roleOptions}
                 isRequired={true}
                 optgroup={true}
                 onChange={handleInputChange}
+                error={errors.category}
               />
             </div>
 
@@ -304,9 +518,14 @@ function JobPosting() {
                 label="Years of experience"
                 description="Select the minimum years of experience required for the position."
                 id="experience"
+                name="experience"
+                value={experienceOptions.find(option => 
+                  option.min === formData.experience.min && option.max === formData.experience.max
+                )?.value || ""}
                 options={experienceOptions}
                 isRequired={true}
                 onChange={handleInputChange}
+                error={errors.experience}
               />
             </div>
 
@@ -326,6 +545,9 @@ function JobPosting() {
                 selectedSkills={selectedSkills}
                 setSelectedSkills={setSelectedSkills}
               />
+              {errors.skills && (
+                <p className="mt-1 text-sm text-red-600">{errors.skills}</p>
+              )}
             </div>
 
             <div>
@@ -359,6 +581,7 @@ function JobPosting() {
                 type="date"
                 value={formData.applicationDeadline}
                 onChange={handleInputChange}
+                error={errors.applicationDeadline}
               />
             </div>
 
@@ -476,6 +699,9 @@ function JobPosting() {
                   }))}
                 />
               </div>
+              {errors.salary && (
+                <p className="mt-1 text-sm text-red-600">{errors.salary}</p>
+              )}
 
               <div>
                 <Checkbox
@@ -500,6 +726,7 @@ function JobPosting() {
                 handleGenerate={handleGenerate}
                 generatingDescription={generatingDescription}
                 value={formData.description}
+                error={errors.description}
               />
             </div>
 
@@ -510,14 +737,6 @@ function JobPosting() {
             />
           </form>
         </div>
-        <Dialogbox
-          isOpen={dialog.isOpen}
-          setIsOpen={(isOpen) => setDialog({ ...dialog, isOpen })}
-          title={dialog.title}
-          message={dialog.message}
-          buttonText={dialog.buttonText}
-          onClose={dialog.onClose}
-        />
       </div>
     </div>
   );

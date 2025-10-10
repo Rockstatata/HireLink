@@ -16,7 +16,7 @@ function SkillsSearch({ selectedSkills, setSelectedSkills, profile }) {
         if (searchTerm) {
           const data = await externalApiServices.searchSkills(searchTerm);
           setSkillsApiData(
-            data.filter((skill) => !selectedSkills.has(skill.name))
+            data ? data.filter((skill) => !selectedSkills.has(skill.name)) : []
           );
         } else {
           setSkillsApiData([]);
@@ -56,7 +56,7 @@ function SkillsSearch({ selectedSkills, setSelectedSkills, profile }) {
 
   const makeAddSkillRequest = async (skill) => {
     try {
-      const res = await userService.addSkill(skill);
+      await userService.addSkill(skill);
     } catch (error) {
       console.log(error);
     }
@@ -64,7 +64,7 @@ function SkillsSearch({ selectedSkills, setSelectedSkills, profile }) {
 
   const makeRemoveSkillRequest = async (skill) => {
     try {
-      const res = await userService.removeSkill(skill);
+      await userService.removeSkill(skill);
     } catch (error) {
       console.log(error);
     }
@@ -117,6 +117,11 @@ function SkillsSearch({ selectedSkills, setSelectedSkills, profile }) {
                   </li>
                 )}
           </ul>
+        )}
+        {!searchTerm && (
+          <div className="text-sm text-gray-500 mt-2 px-2">
+            Start typing to search for skills or add custom skills
+          </div>
         )}
       </div>
     </div>

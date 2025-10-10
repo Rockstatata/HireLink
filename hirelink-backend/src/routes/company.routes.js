@@ -8,6 +8,7 @@ import {
   removeFromApplications,
   removeFromShortlist,
   shortlistCandidate,
+  getCandidateMatches,
 } from "../controllers/company.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
@@ -26,5 +27,6 @@ router
 
 router.route("/shortlist-candidate").post(verifyJWT, shortlistCandidate);
 router.route("/remove-from-shortlisted").post(verifyJWT, removeFromShortlist);
+router.route("/candidate-matches/:jobId").get(verifyJWT, getCandidateMatches);
 
 export default router;

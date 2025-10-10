@@ -11,6 +11,7 @@ function TextEditor({
   description,
   handleGenerate,
   generatingDescription,
+  error,
 }) {
   const editorRef = useRef(null);
   const [isActive, setIsActive] = useState(false);
@@ -188,13 +189,20 @@ function TextEditor({
         </div>
       </div>
 
-      <style jsx>{`
-        [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-          pointer-events: none;
-        }
-      `}</style>
+      {/* Custom CSS for placeholder */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            pointer-events: none;
+          }
+        `
+      }} />
+      
+      {error && (
+        <p className="mt-1 text-sm text-red-600">{error}</p>
+      )}
     </div>
   );
 }
