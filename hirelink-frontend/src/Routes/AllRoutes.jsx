@@ -16,6 +16,7 @@ import JobSeekerDashboard from "../components/JobSeekerDashboard/JobSeekerDashbo
 import Companies from "../Pages/Companies";
 import UserProfile from "../Pages/UserProfile";
 import UserPublicProfile from "../Pages/UserPublicProfile";
+import Messages from "../Pages/Messages";
 
 
 
@@ -74,6 +75,16 @@ function AllRoutes() {
         element={
           <PrivateRoutes>
             <UserProfile />
+          </PrivateRoutes>
+        }
+      />
+
+      {/* Messages Route */}
+      <Route
+        path="/messages"
+        element={
+          <PrivateRoutes>
+            <Messages />
           </PrivateRoutes>
         }
       />

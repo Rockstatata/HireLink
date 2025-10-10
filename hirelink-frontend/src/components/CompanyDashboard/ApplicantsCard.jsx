@@ -1,26 +1,42 @@
 import React from "react";
 import { companyService } from "../../services/companyService";
+import { messageService } from "../../services/messageService";
 import { useNavigate } from "react-router-dom";
 
 function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
   const navigate = useNavigate();
 
+  // Add debugging to see data structure - reduced logging
+  if (!data?.applicantProfile?.userProfile?.profilePicture) {
+    console.log("Missing profile picture for:", data?.applicantProfile?.name || "Unknown");
+  }
+
   // Add safety checks for data structure
   if (!data || !data.applicantProfile) {
     return (
-      <div className="rounded border shadow py-3.5 px-4 flex items-center justify-center">
-        <p className="text-gray-500">No applicant data available</p>
+      <div className="rounded-lg border border-neutral-200 bg-white p-6 flex items-center justify-center shadow-lg"
+           style={{ boxShadow: '4px 4px 0px #9E0A57' }}>
+        <p className="text-text-secondary">No applicant data available</p>
       </div>
     );
   }
 
-  const { applicantProfile, jobDetails } = data;
-  
-  // Safe destructuring with fallbacks
+  const { applicantProfile, jobDetails, status, appliedAt, coverLetter } = data;
+
+  // Safe destructuring with fallbacks - backend maps jobSeekerProfile to userProfile
   const userProfile = applicantProfile?.userProfile || {};
+  
+  // Try multiple sources for profile picture - User model first, then jobSeekerProfile
+  const profilePicture = applicantProfile?.profilePicture || 
+                        userProfile?.profilePicture || 
+                        "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
+
+  // Enhanced debugging and better profile picture handling - reduced logging
+  if (profilePicture.includes('Default_pfp.svg')) {
+    console.log("Using default profile picture for:", userProfile?.name || 'Unknown');
+  }
+
   const {
-    profilePicture = "https://via.placeholder.com/80",
-    name = "Unknown Applicant",
     bio = "No bio available",
     education = [],
     workExperience = [],
@@ -28,7 +44,13 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
     yearsOfExperience = 0,
     resume = null,
     socialProfiles = {},
+    skills = [],
   } = userProfile;
+
+  // Get name from user object directly, fallback to userProfile
+  const name = applicantProfile?.name || userProfile?.name || "Unknown Applicant";
+
+  // Remove the old enhanced debugging as we have it above now
 
   function formatDate(dateString) {
     const options = { year: "numeric", month: "short" };
@@ -45,40 +67,53 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
 
   const removeApplicant = async () => {
     try {
-      const res = await companyService.removeApplication({
+      await companyService.removeApplication({
         jobId: jobDetails._id,
         applicantId: applicantProfile._id,
       });
-      console.log(res);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      console.log("Error removing application:", error);
+      alert("Failed to reject applicant. Please try again.");
     }
   };
 
   const shortlistCandidate = async () => {
     try {
-      const res = await companyService.shortlistCandidate({
+      await companyService.shortlistCandidate({
         jobId: jobDetails._id,
         applicantId: applicantProfile._id,
       });
-      console.log(res);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      console.log("Error shortlisting candidate:", error);
+      alert("Failed to shortlist candidate. Please try again.");
     }
   };
 
   const removeShortlistedCandidate = async () => {
     try {
-      const res = await companyService.removeFromShortlist({
+      await companyService.removeFromShortlist({
         jobId: jobDetails._id,
         applicantId: applicantProfile._id,
       });
-      console.log(res);
       fetchApplications();
     } catch (error) {
-      console.log(error);
+      console.log("Error removing from shortlist:", error);
+      alert("Failed to remove from shortlist. Please try again.");
+    }
+  };
+
+  const requestToChat = async () => {
+    try {
+      await messageService.sendChatRequest({
+        applicantId: applicantProfile._id,
+        jobId: jobDetails._id
+      });
+      alert(`Chat request sent to ${name}! They will be notified in their messages section.`);
+    } catch (error) {
+      console.log("Error sending chat request:", error);
+      alert("Failed to send chat request. Please try again.");
     }
   };
 
@@ -86,164 +121,255 @@ function ApplicantsCard({ isShortlisted, data, fetchApplications }) {
     navigate(`/user/${applicantProfile._id}`);
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'shortlisted': return 'bg-accent text-white';
+      case 'rejected': return 'bg-error text-white';
+      case 'reviewed': return 'bg-warning text-white';
+      case 'hired': return 'bg-success text-white';
+      default: return 'bg-primary text-white';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'shortlisted': return '⭐';
+      case 'rejected': return '❌';
+      case 'reviewed': return '👁️';
+      case 'hired': return '🎉';
+      default: return '📝';
+    }
+  };
+
   return (
-    <div className="rounded border shadow py-3.5 px-4 flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row justify-between">
-        <div className="flex flex-col md:flex-row gap-5 ">
-          <div className="h-20 md:h-16 rounded-full overflow-hidden flex justify-center">
-            <img src={profilePicture} className="h-20 md:h-16 rounded-full" />
-          </div>
-          <div className="flex flex-col gap-3 md:gap-0">
-            <div>
-              <h3 className="font-semibold text-xl text-center md:text-left">
-                {name}
-              </h3>
+    <div className="rounded-lg border border-neutral-200 bg-white overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+         style={{ boxShadow: '4px 4px 0px #9E0A57' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-primary to-primary-light p-4 text-white">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <img
+              src={profilePicture}
+              alt={`${name}'s profile`}
+              className="w-16 h-16 rounded-full border-4 border-white object-cover"
+              onError={(e) => {
+                e.target.src = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
+              }}
+            />
+            <div className={`absolute -bottom-1 -right-1 px-2 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>
+              {getStatusIcon(status)}
             </div>
-            <div className="text-xs font-medium text-gray-600 flex gap-1.5 items-center flex-col md:flex-row">
-              <span>{yearsOfExperience || 0} Years of exp</span>
-              <div className="h-1 w-1 bg-gray-600 rounded-full"></div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg text-white">{name}</h3>
+            <div className="flex items-center gap-2 text-white/80 text-sm">
+              <span>{yearsOfExperience || 0} Years Experience</span>
               {address?.country && (
-                <span className="capitalize">{address?.country} </span>
+                <>
+                  <span>•</span>
+                  <span className="capitalize">{address.country}</span>
+                </>
               )}
             </div>
-            <div className="text-xs bg-green-200 px-1.5 py-px rounded-md font-medium text-green-600 my-1.5 flex items-center justify-center cursor-pointer">
-              ✅ Applied for: {jobDetails.title}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3 h-6 items-center justify-center my-2 md:my-0">
-          {socialProfiles?.linkedin && (
-            <div className="flex justify-center items-center bg-green-200 p-1 rounded hover:cursor-pointer">
-              <a href={socialProfiles?.linkedin} target="_blank">
-                <i className="fa-brands fa-linkedin-in text-green-600 "></i>
-              </a>
-            </div>
-          )}
-
-          {resume && (
-            <div className="flex justify-center items-center bg-green-200 py-1 px-1.5 rounded">
-              <span className="text-green-700 text-[0.67rem] lg:text-xs font-semibold hover:cursor-pointer">
-                <a href={resume} target="_blank">
-                  Resume ✨
-                </a>
+            <div className="mt-1">
+              <span className="inline-block bg-white/20 text-white px-2 py-1 rounded-full text-xs font-medium">
+                Applied {appliedAt ? formatDate(appliedAt) : 'Recently'}
               </span>
             </div>
-          )}
-
-          <div className="flex justify-center items-center bg-green-200 py-1 px-1.5 rounded">
-            <span
-              className="text-green-700 text-[0.67rem] lg:text-xs font-semibold hover:cursor-pointer"
-              onClick={openPublicProfile}
-            >
-              View profile 👀
-            </span>
           </div>
         </div>
       </div>
-      <div className="text-sm flex flex-col md:flex-row gap-5 px-3">
-        <p
-          className="font-semibold text-gray-600 underline text-center md:text-left text-base md:text-sm
-        "
-        >
-          Bio
-        </p>
-        <p>{bio}</p>
-      </div>
-      <div>
-        <div className="flex flex-col gap-3.5">
-          {workExperience?.length > 0 && (
-            <>
-              <p className="text-gray-500 text-sm">Experience</p>
-              {workExperience.map((exp, index) => (
-                <div className="flex gap-4 md:pl-2" key={index}>
-                  <div className="h-11 rounded-lg overflow-hidden border p-1 flex justify-center items-center">
-                    <img
-                      src={
-                        exp.company.logoUrl ||
-                        "https://photos.wellfound.com/startups/i/267839-22e9550a168c9834c67a3e55e2577688-medium_jpg.jpg?buster=1677467708"
-                      }
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 md:gap-0">
-                    <p className="font-medium text-sm">{exp.jobTitle}</p>
-                    <p className="text-xs text-gray-500">{exp.company.name}</p>
-                    <p className="text-xs text-gray-400 font-medium">
-                      {exp.startMonth && exp.endMonth
-                        ? `${formatDate(exp.startMonth)} to ${formatDate(
-                            exp.endMonth
-                          )} - ${calculateDuration(
-                            exp.startMonth,
-                            exp.endMonth
-                          )}`
-                        : null}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
+
+      {/* Job Information */}
+      <div className="p-4 border-b border-neutral-100">
+        <div className="flex items-center gap-2 mb-2">
+          <i className="fa-solid fa-briefcase text-primary"></i>
+          <span className="font-semibold text-text-primary">Applied for:</span>
         </div>
-        <div className="my-2 flex flex-col gap-2.5 md:gap-1">
-          {education?.length > 0 && (
-            <>
-              <p className="text-gray-500 text-sm my-2">Education</p>
-              {education?.map((edu, index) => (
-                <div className="text-xs font-medium md:pl-2" key={index}>
-                  <div className="flex flex-col md:flex-row md:items-center md:gap-3">
-                    <p>
-                      {edu?.degree}, {edu?.fieldOfStudy}
-                    </p>
-                    <div className="h-1.5 w-1.5 bg-gray-600 rounded-full hidden md:block"></div>
-                    <p className="text-gray-400">
-                      {edu.startYear && edu.endYear
-                        ? `${new Date(
-                            edu.startYear
-                          ).getFullYear()} - ${new Date(
-                            edu.endYear
-                          ).getFullYear()}`
-                        : null}
-                    </p>
-                  </div>
-                  <p className="text-gray-500 my-1">{edu?.institution}</p>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row gap-3.5 justify-end">
-        {isShortlisted ? (
-          <>
-            <button
-              className="p-2 px-4 font-medium text-xs rounded-md bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 flex items-center justify-center"
-              onClick={removeShortlistedCandidate}
-            >
-              ❌ Remove from shortlist
-            </button>
-            <button className="p-2 px-4 font-medium text-xs rounded-md bg-black text-white hover:bg-gray-800 hover:text-white flex items-center justify-center">
-              💬 Request to chat
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className="p-2 px-4 font-medium text-xs rounded-md bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 flex items-center justify-center"
-              onClick={removeApplicant}
-            >
-              ❌ Not interested
-            </button>
-            <button
-              className="p-2 px-4 font-medium text-xs rounded-md bg-black text-white hover:bg-gray-800 hover:text-white flex items-center justify-center"
-              onClick={shortlistCandidate}
-            >
-              🔖 Shortlist
-            </button>
-            <button className="p-2 px-4 font-medium text-xs rounded-md bg-black text-white hover:bg-gray-800 hover:text-white flex items-center justify-center">
-              💬 Request to chat
-            </button>
-          </>
+        <p className="text-text-secondary font-medium">{jobDetails?.title || 'Unknown Position'}</p>
+        {coverLetter && (
+          <div className="mt-2 p-3 bg-neutral-50 rounded-lg">
+            <p className="text-xs text-text-secondary mb-1">Cover Letter:</p>
+            <p className="text-sm text-text-primary line-clamp-2">{coverLetter}</p>
+          </div>
         )}
+      </div>
+
+      {/* Bio Section */}
+      {bio && (
+        <div className="p-4 border-b border-neutral-100">
+          <div className="flex items-center gap-2 mb-2">
+            <i className="fa-solid fa-user text-primary"></i>
+            <span className="font-semibold text-text-primary">Bio</span>
+          </div>
+          <p className="text-text-secondary text-sm leading-relaxed">{bio}</p>
+        </div>
+      )}
+
+      {/* Skills */}
+      {skills && skills.length > 0 && (
+        <div className="p-4 border-b border-neutral-100">
+          <div className="flex items-center gap-2 mb-2">
+            <i className="fa-solid fa-code text-primary"></i>
+            <span className="font-semibold text-text-primary">Skills</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {skills.slice(0, 5).map((skill, index) => (
+              <span key={index} className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
+                {skill}
+              </span>
+            ))}
+            {skills.length > 5 && (
+              <span className="text-text-secondary text-xs">+{skills.length - 5} more</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Experience */}
+      {workExperience && workExperience.length > 0 && (
+        <div className="p-4 border-b border-neutral-100">
+          <div className="flex items-center gap-2 mb-3">
+            <i className="fa-solid fa-building text-primary"></i>
+            <span className="font-semibold text-text-primary">Recent Experience</span>
+          </div>
+          {workExperience.slice(0, 2).map((exp, index) => (
+            <div key={index} className="flex gap-3 mb-3 last:mb-0">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg overflow-hidden border border-neutral-200 flex items-center justify-center bg-neutral-50">
+                  <img
+                    src={exp.company?.logoUrl || "https://via.placeholder.com/40?text=Co"}
+                    alt={exp.company?.name || 'Company'}
+                    className="w-8 h-8 object-contain"
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/40?text=Co";
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-text-primary text-sm">{exp.jobTitle}</p>
+                <p className="text-text-secondary text-xs">{exp.company?.name || 'Company'}</p>
+                {exp.startMonth && exp.endMonth && (
+                  <p className="text-text-muted text-xs">
+                    {formatDate(exp.startMonth)} - {formatDate(exp.endMonth)}
+                    {calculateDuration(exp.startMonth, exp.endMonth) && (
+                      <span className="ml-1">• {calculateDuration(exp.startMonth, exp.endMonth)}</span>
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Education */}
+      {education && education.length > 0 && (
+        <div className="p-4 border-b border-neutral-100">
+          <div className="flex items-center gap-2 mb-3">
+            <i className="fa-solid fa-graduation-cap text-primary"></i>
+            <span className="font-semibold text-text-primary">Education</span>
+          </div>
+          {education.slice(0, 1).map((edu, index) => (
+            <div key={index}>
+              <p className="font-medium text-text-primary text-sm">
+                {edu.degree}, {edu.fieldOfStudy}
+              </p>
+              <p className="text-text-secondary text-xs">{edu.institution}</p>
+              {edu.startYear && edu.endYear && (
+                <p className="text-text-muted text-xs">
+                  {edu.startYear} - {edu.endYear}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="p-4 bg-neutral-50">
+        <div className="flex flex-wrap gap-2">
+          {/* Social Links */}
+          <div className="flex gap-2 mr-4">
+            {socialProfiles?.linkedin && (
+              <a
+                href={socialProfiles.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark transition-colors"
+                title="LinkedIn Profile"
+              >
+                <i className="fa-brands fa-linkedin-in text-xs"></i>
+              </a>
+            )}
+            {resume && (
+              <a
+                href={resume}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center hover:bg-accent-dark transition-colors"
+                title="Download Resume"
+              >
+                <i className="fa-solid fa-file-pdf text-xs"></i>
+              </a>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-1 gap-2">
+            <button
+              onClick={openPublicProfile}
+              className="flex-1 py-2 px-3 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
+            >
+              <i className="fa-solid fa-eye"></i>
+              View Profile
+            </button>
+
+            {isShortlisted ? (
+              <>
+                <button
+                  onClick={removeShortlistedCandidate}
+                  className="py-2 px-3 bg-error text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-times"></i>
+                  Remove
+                </button>
+                <button
+                  onClick={requestToChat}
+                  className="py-2 px-3 bg-secondary text-white text-xs font-medium rounded-lg hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-comments"></i>
+                  Chat
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={removeApplicant}
+                  className="py-2 px-3 bg-neutral-300 text-text-primary text-xs font-medium rounded-lg hover:bg-neutral-400 transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-times"></i>
+                  Reject
+                </button>
+                <button
+                  onClick={shortlistCandidate}
+                  className="py-2 px-3 bg-warning text-white text-xs font-medium rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-star"></i>
+                  Shortlist
+                </button>
+                <button
+                  onClick={requestToChat}
+                  className="py-2 px-3 bg-secondary text-white text-xs font-medium rounded-lg hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                >
+                  <i className="fa-solid fa-comments"></i>
+                  Chat
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

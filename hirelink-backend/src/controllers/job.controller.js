@@ -6,7 +6,7 @@ import { Application } from "../models/application.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { generateJobDescription, generateJobRecommendations, matchCandidates } from "../utils/openAi.service.js";
+import { generateJobDescription, generateJobRecommendations, matchCandidates } from "../utils/groqAi.service.js";
 import { JSDOM } from "jsdom";
 import createDOMPurify from "dompurify";
 
@@ -658,6 +658,10 @@ const getMyCompanyApplications = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { page = 1, limit = 10, status = 'all' } = req.query;
 
+  console.log("=== getMyCompanyApplications called ===");
+  console.log("User ID:", userId);
+  console.log("Query params:", { page, limit, status });
+
   const user = await User.findById(userId);
   if (!user || user.role !== "employer") {
     throw new ApiError(403, "Only employers can access this endpoint");
@@ -665,67 +669,88 @@ const getMyCompanyApplications = asyncHandler(async (req, res) => {
 
   // Find all jobs posted by this company
   const companyJobs = await Job.find({ postedBy: userId }).select('_id title');
+  console.log("Company jobs found:", companyJobs.length);
   const jobIds = companyJobs.map(job => job._id);
 
   if (jobIds.length === 0) {
+    console.log("No jobs found for this employer");
     return res.status(200).json(
       new ApiResponse(200, { applications: [], pagination: { current: 1, total: 0, hasNext: false, hasPrev: false } }, "No applications found")
     );
   }
 
-  // Build filter for applications
-  const filter = { _id: { $in: jobIds }, 'applicants.0': { $exists: true } };
-  
+  // Use Application model instead of Job.applicants
+  const filter = { job: { $in: jobIds } };
   if (status !== 'all') {
-    filter['applicants.status'] = status;
+    filter.status = status;
   }
+
+  console.log("Filter for applications:", filter);
 
   const pageNumber = parseInt(page);
   const limitNumber = parseInt(limit);
-  const startIndex = (pageNumber - 1) * limitNumber;
+  const skip = (pageNumber - 1) * limitNumber;
 
-  // Get jobs with applications
-  const jobsWithApplications = await Job.find(filter)
-    .populate('applicants.user', 'name email userProfile')
-    .sort({ 'applicants.appliedAt': -1 })
-    .skip(startIndex)
+  // Get applications directly from Application model
+  const applications = await Application.find(filter)
+    .populate({
+      path: 'applicant',
+      select: 'name email userProfile jobSeekerProfile',
+      populate: {
+        path: 'jobSeekerProfile',
+        select: 'profilePicture address bio location yearsOfExperience socialProfiles workExperience education skills name resume'
+      }
+    })
+    .populate({
+      path: 'job',
+      select: '_id title'
+    })
+    .sort({ appliedAt: -1 })
+    .skip(skip)
     .limit(limitNumber);
 
-  // Flatten applications with job info
-  let allApplications = [];
-  jobsWithApplications.forEach(job => {
-    job.applicants.forEach(application => {
-      if (status === 'all' || application.status === status) {
-        allApplications.push({
-          _id: application._id,
-          job: {
-            _id: job._id,
-            title: job.title,
-            company: job.company
-          },
-          user: application.user,
-          status: application.status,
-          appliedAt: application.appliedAt,
-          coverLetter: application.coverLetter,
-          resume: application.resume
-        });
-      }
-    });
-  });
+  const total = await Application.countDocuments(filter);
 
-  // Sort by application date
-  allApplications.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
+  console.log("Applications found:", applications.length);
+  console.log("Total applications count:", total);
 
-  const total = allApplications.length;
+  // Map to the expected format
+  const formattedApplications = applications.map(app => ({
+    applicantProfile: {
+      _id: app.applicant._id,
+      name: app.applicant.name || app.applicant.jobSeekerProfile?.name,
+      email: app.applicant.email,
+      profilePicture: app.applicant.userProfile?.profilePicture || app.applicant.jobSeekerProfile?.profilePicture,
+      userProfile: app.applicant.jobSeekerProfile // Map jobSeekerProfile to userProfile
+    },
+    jobDetails: {
+      _id: app.job._id,
+      title: app.job.title
+    },
+    status: app.status,
+    appliedAt: app.appliedAt,
+    coverLetter: app.coverLetter,
+    resume: app.resume
+  }));
+
+  console.log("Sample formatted application:", formattedApplications[0] ? {
+    jobTitle: formattedApplications[0].jobDetails.title,
+    userName: formattedApplications[0].applicantProfile?.userProfile?.name || formattedApplications[0].applicantProfile?.name,
+    status: formattedApplications[0].status
+  } : "No applications");
+
   const pagination = {
     current: pageNumber,
     total: Math.ceil(total / limitNumber),
-    hasNext: startIndex + limitNumber < total,
+    hasNext: skip + limitNumber < total,
     hasPrev: pageNumber > 1,
   };
 
+  console.log("Final response - applications count:", formattedApplications.length);
+  console.log("Pagination:", pagination);
+
   return res.status(200).json(
-    new ApiResponse(200, { applications: allApplications, pagination }, "Company applications fetched successfully")
+    new ApiResponse(200, { applications: formattedApplications, pagination }, "Company applications fetched successfully")
   );
 });
 
@@ -739,6 +764,7 @@ const shortlistCandidate = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Unauthorized or job not found");
   }
 
+  // Update Application model
   const application = await Application.findOneAndUpdate(
     { job: jobId, applicant: applicantId },
     { status: "shortlisted", reviewedAt: new Date(), reviewedBy: userId },
@@ -747,6 +773,16 @@ const shortlistCandidate = asyncHandler(async (req, res) => {
 
   if (!application) {
     throw new ApiError(404, "Application not found");
+  }
+
+  // Also update the status in Job.applicants array to keep both models in sync
+  const applicantIndex = job.applicants.findIndex(app =>
+    app.user.toString() === applicantId.toString()
+  );
+
+  if (applicantIndex !== -1) {
+    job.applicants[applicantIndex].status = "interviewed"; // Map "shortlisted" to "interviewed" for Job model
+    await job.save();
   }
 
   return res.status(200).json(
@@ -764,6 +800,7 @@ const removeFromShortlist = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Unauthorized or job not found");
   }
 
+  // Update Application model
   const application = await Application.findOneAndUpdate(
     { job: jobId, applicant: applicantId },
     { status: "reviewed", reviewedAt: new Date(), reviewedBy: userId },
@@ -772,6 +809,16 @@ const removeFromShortlist = asyncHandler(async (req, res) => {
 
   if (!application) {
     throw new ApiError(404, "Application not found");
+  }
+
+  // Also update the status in Job.applicants array to keep both models in sync
+  const applicantIndex = job.applicants.findIndex(app =>
+    app.user.toString() === applicantId.toString()
+  );
+
+  if (applicantIndex !== -1) {
+    job.applicants[applicantIndex].status = "reviewed"; // Map "reviewed" to "reviewed" for Job model
+    await job.save();
   }
 
   return res.status(200).json(
@@ -789,6 +836,7 @@ const rejectCandidate = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Unauthorized or job not found");
   }
 
+  // Update Application model
   const application = await Application.findOneAndUpdate(
     { job: jobId, applicant: applicantId },
     { status: "rejected", reviewedAt: new Date(), reviewedBy: userId },
@@ -797,6 +845,16 @@ const rejectCandidate = asyncHandler(async (req, res) => {
 
   if (!application) {
     throw new ApiError(404, "Application not found");
+  }
+
+  // Also update the status in Job.applicants array to keep both models in sync
+  const applicantIndex = job.applicants.findIndex(app =>
+    app.user.toString() === applicantId.toString()
+  );
+
+  if (applicantIndex !== -1) {
+    job.applicants[applicantIndex].status = "rejected"; // Map "rejected" to "rejected" for Job model
+    await job.save();
   }
 
   return res.status(200).json(

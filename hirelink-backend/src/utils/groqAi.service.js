@@ -30,7 +30,7 @@ The description should include sections for:
 - Experience Requirements
 - What We Offer
 
-Make it engaging and professional. Return only the HTML content without any markdown code blocks.
+Make it engaging and professional. Return only the inner HTML content (without <html>, <body>, or <head> tags) that can be directly inserted into a content editable div.
 `;
 
     const chatCompletion = await groq.chat.completions.create({
@@ -45,7 +45,29 @@ Make it engaging and professional. Return only the HTML content without any mark
       throw new Error('No response from Groq API');
     }
 
-    return description;
+    // Extract content from HTML tags if present and remove markdown code blocks
+    let cleanedDescription = description;
+    
+    // Remove markdown code blocks if present
+    if (cleanedDescription.startsWith('```html') && cleanedDescription.endsWith('```')) {
+      cleanedDescription = cleanedDescription.slice(7, -3).trim();
+    } else if (cleanedDescription.startsWith('```') && cleanedDescription.endsWith('```')) {
+      cleanedDescription = cleanedDescription.slice(3, -3).trim();
+    }
+    
+    // Extract content from HTML tags if present
+    if (cleanedDescription.includes('<html>') || cleanedDescription.includes('<body>')) {
+      // Try to extract the content inside the body or main div
+      const bodyMatch = cleanedDescription.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch) {
+        cleanedDescription = bodyMatch[1].trim();
+      } else {
+        // Fallback: remove html and body tags
+        cleanedDescription = cleanedDescription.replace(/<\/?html[^>]*>/gi, '').replace(/<\/?body[^>]*>/gi, '').trim();
+      }
+    }
+
+    return cleanedDescription;
   } catch (error) {
     console.error('Error generating job description:', error);
     throw new Error('Failed to generate job description');

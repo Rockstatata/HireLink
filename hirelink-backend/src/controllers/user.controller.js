@@ -10,7 +10,7 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.service.js";
-import { analyzeSkillGaps as analyzeSkillGapsAI } from "../utils/openAi.service.js";
+import { analyzeSkillGaps as analyzeSkillGapsAI } from "../utils/groqAi.service.js";
 
 const cookieOptions = {
   httpOnly: true,

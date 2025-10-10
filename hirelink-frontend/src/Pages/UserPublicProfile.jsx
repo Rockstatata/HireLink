@@ -4,18 +4,29 @@ import { userService } from "../services/userService";
 
 function UserPublicProfile() {
   const { id } = useParams();
-  const [userDetails, setUserDetails] = useState([]);
+  const [userDetails, setUserDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getUserProfile();
-  }, []);
+    if (id) {
+      getUserProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const getUserProfile = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await userService.getPublicProfile(id);
-      setUserDetails(res);
+      console.log("Public profile response:", res);
+      setUserDetails(res.data || res);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching public profile:", error);
+      setError(error.response?.data?.message || "Failed to load user profile");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,11 +45,32 @@ function UserPublicProfile() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 mt-[3.5rem]">
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4 text-text-secondary">Loading profile...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-4">😞</div>
+          <h3 className="text-lg font-medium text-text-primary mb-2">Profile Not Found</h3>
+          <p className="text-text-secondary">{error}</p>
+        </div>
+      ) : !userDetails ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-4">👤</div>
+          <h3 className="text-lg font-medium text-text-primary mb-2">No Profile Data</h3>
+          <p className="text-text-secondary">This user's profile is not available.</p>
+        </div>
+      ) : (
       <div className="p-8 bg-white rounded-xl shadow-lg w-10/12 mt-7 border border-neutral-200">
         <img
           className="w-24 h-24 mx-auto rounded-full border-4 border-primary shadow-md"
-          src={userDetails?.userProfile?.profilePicture}
+          src={userDetails?.userProfile?.profilePicture || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"}
           alt="Profile"
+          onError={(e) => {
+            e.target.src = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
+          }}
         />
         <h2 className="mt-4 text-2xl font-semibold text-center text-text-primary">
           {userDetails?.userProfile?.name}
@@ -177,6 +209,7 @@ function UserPublicProfile() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

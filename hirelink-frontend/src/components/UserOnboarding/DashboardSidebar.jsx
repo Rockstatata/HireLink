@@ -3,6 +3,7 @@ import {
   UserPlusIcon,
   ShieldCheckIcon,
   ChatBubbleBottomCenterIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
 import { NavLink, Link, useNavigate } from "react-router-dom";
@@ -33,6 +34,11 @@ const sidebarLinks = [
     href: "/dashboard/messages",
     icon: ChatBubbleBottomCenterIcon,
   },
+  {
+    name: "Profile",
+    href: "/dashboard/profile",
+    icon: UserCircleIcon,
+  },
 ];
 
 function DashboardSidebar() {
@@ -41,6 +47,7 @@ function DashboardSidebar() {
 
   useEffect(() => {
     updateUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dispatch = useDispatch();

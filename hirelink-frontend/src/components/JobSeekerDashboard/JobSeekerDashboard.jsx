@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../services/userService";
+import { messageService } from "../../services/messageService";
 
 function JobSeekerDashboard() {
   const [savedJobs, setSavedJobs] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
@@ -16,11 +19,17 @@ function JobSeekerDashboard() {
   const fetchData = async () => {
     try {
       // These endpoints need to be implemented in the backend
-      const savedJobsResponse = await userService.getSavedJobs();
-      const applicationsResponse = await userService.getMyApplications();
+      const [savedJobsResponse, applicationsResponse, messagesResponse, unreadResponse] = await Promise.all([
+        userService.getSavedJobs(),
+        userService.getMyApplications(),
+        messageService.getMyMessages({ limit: 10 }),
+        messageService.getUnreadMessageCount()
+      ]);
       
       setSavedJobs(savedJobsResponse || []);
       setApplications(applicationsResponse || []);
+      setMessages(messagesResponse?.data?.messages || []);
+      setUnreadCount(unreadResponse?.data?.unreadCount || 0);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -86,6 +95,21 @@ function JobSeekerDashboard() {
             }`}
           >
             Saved Jobs ({savedJobs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm relative ${
+              activeTab === 'messages'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Messages ({messages.length})
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </button>
         </nav>
       </div>
@@ -239,6 +263,82 @@ function JobSeekerDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Messages Tab */}
+      {activeTab === 'messages' && (
+        <div className="bg-white rounded-lg shadow-md">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium text-gray-900">Recent Messages</h2>
+              <button
+                onClick={() => navigate('/messages')}
+                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                View All Messages
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            {messages.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <i className="fas fa-envelope text-4xl mb-4"></i>
+                <p>No messages yet</p>
+                <p className="text-sm mt-2">Messages from employers will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.slice(0, 5).map((message) => (
+                  <div key={message._id} className={`border rounded-lg p-4 hover:bg-gray-50 ${!message.isRead ? 'bg-blue-50 border-blue-200' : ''}`}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-gray-900">{message.subject}</h3>
+                          {message.type === 'chat_request' && (
+                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                              Chat Request
+                            </span>
+                          )}
+                          {!message.isRead && (
+                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                              New
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          From: {message.from?.name || 'Unknown'}
+                        </p>
+                        {message.relatedJob && (
+                          <p className="text-sm text-blue-600 mb-2">
+                            <i className="fas fa-briefcase mr-1"></i>
+                            Related to: {message.relatedJob.title}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-700 line-clamp-2">
+                          {message.content.substring(0, 100)}...
+                        </p>
+                        <div className="text-xs text-gray-500 mt-2">
+                          {new Date(message.createdAt).toLocaleDateString()} at{' '}
+                          {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {messages.length > 5 && (
+                  <div className="text-center pt-4">
+                    <button
+                      onClick={() => navigate('/messages')}
+                      className="px-4 py-2 text-blue-600 hover:text-blue-800"
+                    >
+                      View {messages.length - 5} more message{messages.length - 5 > 1 ? 's' : ''}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

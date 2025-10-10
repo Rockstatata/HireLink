@@ -45,7 +45,7 @@ function Login() {
       const response = await loginUser(userData);
       const loggedInUser = response.data.data.user;
       dispatch(loginSuccess(loggedInUser));
-      alert('Login successful!');
+      //alert('Login successful!');
       
       // Update user data in Redux store
       await updateUser();

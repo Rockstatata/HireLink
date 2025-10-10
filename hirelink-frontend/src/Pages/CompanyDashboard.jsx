@@ -4,6 +4,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Dashboard from "../components/CompanyDashboard/Dashboard";
 import Applications from "../components/CompanyDashboard/Applications";
 import Shortlisted from "../components/CompanyDashboard/Shortlisted";
+import CompanyProfile from "../components/CompanyDashboard/CompanyProfile";
+import Messages from "../Pages/Messages";
 import JobPosting from "./JobPosting";
 // import { useSelector } from "react-redux";
 
@@ -23,6 +25,8 @@ function CompanyDashboard() {
           <Route path="home" element={<Dashboard />} />
           <Route path="applications" element={<Applications />} />
           <Route path="shortlisted" element={<Shortlisted />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="profile" element={<CompanyProfile />} />
           <Route path="post-job" element={<JobPosting />} />
           <Route path="" element={<Dashboard />} />
         </Routes>

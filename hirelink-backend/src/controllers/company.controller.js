@@ -4,7 +4,7 @@ import { Job } from "../models/job.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Application } from "../models/application.model.js";
-import { matchCandidates } from "../utils/openAi.service.js";
+import { matchCandidates } from "../utils/groqAi.service.js";
 const getAllJobListings = asyncHandler(async (req, res) => {
   const { _id, role } = req.user;
   if (role !== "employer") {
@@ -84,7 +84,7 @@ const getAllApplications = asyncHandler(async (req, res) => {
   const applicants = await Job.aggregate([
     {
       $match: {
-        employer: _id,
+        postedBy: _id,
       },
     },
     {
@@ -128,12 +128,12 @@ const getAllApplications = asyncHandler(async (req, res) => {
   if (!final || final.length === 0) {
     return res
       .status(200)
-      .json(new ApiResponse(200, {}, "No job listings found"));
+      .json(new ApiResponse(200, { applications: [], pagination: { current: 1, total: 0, hasNext: false, hasPrev: false } }, "No job listings found"));
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, final, "Job listings fetched successfully"));
+    .json(new ApiResponse(200, { applications: final, pagination: { current: 1, total: 1, hasNext: false, hasPrev: false } }, "Job listings fetched successfully"));
 });
 
 const getShortListedCandidates = asyncHandler(async (req, res) => {
@@ -144,7 +144,7 @@ const getShortListedCandidates = asyncHandler(async (req, res) => {
   const shortlistedCandidates = await Job.aggregate([
     {
       $match: {
-        employer: _id,
+        postedBy: _id,
       },
     },
     {
@@ -188,12 +188,12 @@ const getShortListedCandidates = asyncHandler(async (req, res) => {
   if (!final || final.length === 0) {
     return res
       .status(200)
-      .json(new ApiResponse(200, {}, "No job listings found"));
+      .json(new ApiResponse(200, { applications: [], pagination: { current: 1, total: 0, hasNext: false, hasPrev: false } }, "No job listings found"));
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, final, "Job listings fetched successfully"));
+    .json(new ApiResponse(200, { applications: final, pagination: { current: 1, total: 1, hasNext: false, hasPrev: false } }, "Job listings fetched successfully"));
 });
 
 const removeFromApplications = asyncHandler(async (req, res) => {

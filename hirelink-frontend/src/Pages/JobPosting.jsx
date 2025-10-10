@@ -163,8 +163,8 @@ function JobPosting() {
       delete jobData.urgent;
     }
 
-    // Check required fields
-    const requiredFields = ['title', 'jobType', 'location'];
+    // Check required fields (only 'title' is needed for AI generation)
+    const requiredFields = ['title'];
     const missingFields = requiredFields.filter(field => !jobData[field]);
     
     if (missingFields.length > 0) {
@@ -176,9 +176,10 @@ function JobPosting() {
     try {
       const res = await companyService.generateJobDescription(jobData);
       setGeneratingDescription(false);
+      console.log('Generated description response:', res);
       
-      if (res.success && res.data) {
-        setFormData(prev => ({ ...prev, description: res.data }));
+      if (res) {
+        setFormData(prev => ({ ...prev, description: res }));
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;

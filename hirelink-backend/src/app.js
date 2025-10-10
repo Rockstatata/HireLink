@@ -11,6 +11,7 @@ import multer from "multer";
 import userRoutes from "./routes/user.routes.js";
 import jobRouter from "./routes/jobs.routes.js";
 import companyRouter from "./routes/company.routes.js";
+import messageRouter from "./routes/message.routes.js";
 
 import { connectDB } from "./db/db.js";
 
@@ -41,6 +42,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/jobs", jobRouter);
 app.use("/api/company", companyRouter);
+app.use("/api/messages", messageRouter);
 
 // Global error handler
 app.use((error, req, res, next) => {

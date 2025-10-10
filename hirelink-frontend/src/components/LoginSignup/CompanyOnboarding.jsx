@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import InputField from "../Common/FormComponents/InputField";
 import CompanySearch from "../Common/CompanySearch";
-import { updateUserProfile } from "../../services/userService";
+import { updateUserProfile, userService } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 
 function CompanyOnboarding() {
@@ -30,6 +30,7 @@ function CompanyOnboarding() {
     employeeBenefits: [],
   });
   const [showDropdown, setShowDropdown] = useState(true);
+  const [logoUploading, setLogoUploading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -95,6 +96,40 @@ function CompanyOnboarding() {
         portfolioWebsite: domain,
       },
     }));
+  };
+
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setLogoUploading(true);
+      const response = await userService.updateProfilePicture(file);
+      
+      setCompanyProfile(prev => ({
+        ...prev,
+        companyLogo: response.data.user.userProfile.companyLogo || response.data.profilePicture
+      }));
+      
+      alert('Company logo updated successfully!');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      alert('Failed to upload logo. Please try again.');
+    } finally {
+      setLogoUploading(false);
+    }
   };
 
   return (
@@ -166,6 +201,40 @@ function CompanyOnboarding() {
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <label className="block text-lg font-medium text-text-primary mb-3">
+                      Company Logo
+                    </label>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-24 h-24 rounded-full border-4 border-primary/20 overflow-hidden bg-neutral-100">
+                        <img
+                          src={companyProfile.companyLogo}
+                          alt="Company Logo"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg";
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col items-center space-y-2">
+                        <input
+                          type="file"
+                          id="logo-upload"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="logo-upload"
+                          className={`px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors cursor-pointer ${logoUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                        </label>
+                        <p className="text-sm text-text-secondary">Max 5MB, JPG/PNG</p>
+                      </div>
                     </div>
                   </div>
 

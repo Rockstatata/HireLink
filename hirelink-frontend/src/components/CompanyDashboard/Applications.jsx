@@ -17,19 +17,45 @@ function Applications() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log("useEffect triggered - fetching applications");
     fetchApplications();
-  }, []);
+  }, []); // Empty dependency array to only run on mount
 
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const res = await companyService.getAllApplications();
-      console.log("Called again");
-      // Handle the new response structure: { applications, pagination }
-      const applications = res?.applications || [];
+      console.log("=== Frontend: fetchApplications called ===");
+      const res = await companyService.getAllApplications({ status: 'all' }); // Get all applications to see what statuses they have
+      console.log("API Response received:", res);
+      console.log("Applications array:", res?.applications);
+      console.log("Applications length:", res?.applications?.length || 0);
+      console.log("Raw response structure:", Object.keys(res || {}));
+      
+      // Handle the response structure: { applications, pagination }
+      // Map the backend response to match frontend expectations
+      const allApplications = (res?.applications || []).map(app => ({
+        applicantProfile: app.applicantProfile, // Backend now sends properly formatted applicantProfile
+        jobDetails: app.jobDetails, // Backend now sends properly formatted jobDetails
+        status: app.status,
+        appliedAt: app.appliedAt,
+        coverLetter: app.coverLetter,
+        resume: app.resume
+      }));
+      
+      // Show all applications for debugging - no filtering
+      const applications = allApplications; // .filter(app => 
+      //   app.status === 'pending' || app.status === 'applied' || app.status === 'reviewed'
+      // );
+      
+      console.log("All applications:", allApplications.length);
+      console.log("Filtered applications (active):", applications.length);
+      console.log("Application statuses:", allApplications.map(app => app.status));
       setApplicants(Array.isArray(applications) ? applications : []);
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching applications:", error);
+      console.error("Full error details:", error);
+      console.error("Error response:", error.response);
+      console.error("Error message:", error.message);
       setApplicants([]);
     }
     finally {
@@ -64,6 +90,7 @@ function Applications() {
             <ApplicantsCard
               key={index}
               data={applicant}
+              isShortlisted={false}
               fetchApplications={fetchApplications}
             />
           ))

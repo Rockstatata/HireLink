@@ -27,8 +27,8 @@ async function getAllJobListings() {
   return apiCall("get", "/jobs/my-jobs");
 }
 
-async function getAllApplications() {
-  return apiCall("get", "/jobs/my-company-applications");
+async function getAllApplications(params = {}) {
+  return apiCall("get", "/jobs/my-company-applications", { params });
 }
 
 async function postNewJob(data) {
@@ -57,18 +57,15 @@ async function getShortListedCandidates() {
 }
 
 async function shortlistCandidate(data) {
-  // This would need to be implemented in backend
-  return apiCall("post", "/company/shortlist-candidate", data);
+  return apiCall("post", "/jobs/shortlist-candidate", data);
 }
 
 async function removeApplication(data) {
-  // This would need to be implemented in backend
-  return apiCall("post", "/company/remove-from-applications", data);
+  return apiCall("post", "/jobs/reject-candidate", data);
 }
 
 async function removeFromShortlist(data) {
-  // This would need to be implemented in backend
-  return apiCall("post", "/company/remove-from-shortlisted", data);
+  return apiCall("post", "/jobs/remove-from-shortlist", data);
 }
 
 // Add new functions for job applications

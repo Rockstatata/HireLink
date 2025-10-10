@@ -24,12 +24,28 @@ function Shortlisted() {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const res = await companyService.getShortListedCandidates();
-      // Handle response structure and ensure it's an array
-      const candidates = res?.docs || res || [];
-      setShortlistedCandidates(Array.isArray(candidates) ? candidates : []);
+      console.log("=== Shortlisted: fetchApplications called ===");
+      const res = await companyService.getAllApplications({ status: 'shortlisted' });
+      console.log("Shortlisted API Response received:", res);
+      console.log("Shortlisted applications array:", res?.applications);
+      console.log("Shortlisted applications length:", res?.applications?.length || 0);
+      
+      // Handle the response structure: { applications, pagination }
+      // Map the backend response to match frontend expectations
+      const applications = (res?.applications || []).map(app => ({
+        applicantProfile: app.applicantProfile, // Backend now sends properly formatted applicantProfile
+        jobDetails: app.jobDetails, // Backend now sends properly formatted jobDetails
+        status: app.status,
+        appliedAt: app.appliedAt,
+        coverLetter: app.coverLetter,
+        resume: app.resume
+      }));
+      
+      console.log("Mapped shortlisted applications:", applications);
+      setShortlistedCandidates(Array.isArray(applications) ? applications : []);
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching shortlisted applications:", error);
+      console.error("Full error:", error);
       setShortlistedCandidates([]);
     }
     finally {
