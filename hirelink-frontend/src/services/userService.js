@@ -31,6 +31,12 @@ export const userService = {
   getPublicProfile,
   getSavedJobs,
   getMyApplications,
+  addWorkExperience,
+  updateWorkExperience,
+  deleteWorkExperience,
+  addEducation,
+  updateEducation,
+  deleteEducation,
 };
 
 async function login(userData) {
@@ -65,7 +71,7 @@ async function addSkill(skill) {
 }
 
 async function removeSkill(skill) {
-  const response = await apiCall.delete("/users/remove-skill", { data: { skill } });
+  const response = await apiCall.post("/users/remove-skill", { skill });
   return response.data;
 }
 
@@ -101,5 +107,37 @@ async function getSavedJobs() {
 
 async function getMyApplications() {
   const response = await apiCall.get("/users/my-applications");
+  return response.data;
+}
+
+// Work Experience functions
+async function addWorkExperience(experienceData) {
+  const response = await apiCall.post("/users/work-experience", experienceData);
+  return response.data;
+}
+
+async function updateWorkExperience(experienceId, experienceData) {
+  const response = await apiCall.put(`/users/work-experience/${experienceId}`, experienceData);
+  return response.data;
+}
+
+async function deleteWorkExperience(experienceId) {
+  const response = await apiCall.delete(`/users/work-experience/${experienceId}`);
+  return response.data;
+}
+
+// Education functions
+async function addEducation(educationData) {
+  const response = await apiCall.post("/users/education", educationData);
+  return response.data;
+}
+
+async function updateEducation(educationId, educationData) {
+  const response = await apiCall.put(`/users/education/${educationId}`, educationData);
+  return response.data;
+}
+
+async function deleteEducation(educationId) {
+  const response = await apiCall.delete(`/users/education/${educationId}`);
   return response.data;
 }

@@ -296,41 +296,50 @@ const getUserProfile = asyncHandler(async (req, res) => {
 const updateProfilePicture = asyncHandler(async (req, res) => {
   const profilePictureLocalPath = req.file?.path;
 
+  console.log('Profile picture upload request:', {
+    file: req.file,
+    filePath: profilePictureLocalPath,
+    userId: req.user._id
+  });
+
   if (!profilePictureLocalPath) {
     throw new ApiError(400, "Profile Picture file is missing");
   }
 
   let user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
 
   let oldProfilePictureUrl = user?.userProfile?.profilePicture;
 
+  console.log('Attempting to upload to Cloudinary...');
+  
   const profilePicture = await uploadOnCloudinary(profilePictureLocalPath);
-  if (!profilePicture?.url) {
-    throw new ApiError(400, "Error while uploading profile picture");
+  
+  console.log('Cloudinary upload result:', profilePicture);
+  
+  if (!profilePicture || !profilePicture.url) {
+    console.error('Cloudinary upload failed - no URL returned');
+    throw new ApiError(400, "Error while uploading profile picture to cloud storage");
   }
 
-  if (user.role === "jobSeeker") {
-    user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          "userProfile.profilePicture": profilePicture.url,
-        },
-      },
-      { new: true }
-    ).select("-password");
-  } else if (user.role === "employer") {
-    user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          "userProfile.companyLogo": profilePicture.url,
-        },
-      },
-      { new: true }
-    ).select("-password");
-  }
+  console.log('Successfully uploaded to Cloudinary:', profilePicture.url);
 
+  // Update user profile based on role
+  const updateData = user.role === "jobSeeker" 
+    ? { "userProfile.profilePicture": profilePicture.url }
+    : { "userProfile.companyLogo": profilePicture.url };
+
+  user = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: updateData },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  console.log('User profile updated successfully');
+
+  // Clean up old profile picture from Cloudinary
   if (
     oldProfilePictureUrl &&
     oldProfilePictureUrl !==
@@ -340,12 +349,11 @@ const updateProfilePicture = asyncHandler(async (req, res) => {
       const splitUrl = oldProfilePictureUrl.split("/");
       const filenameWithExtension = splitUrl[splitUrl.length - 1];
       const imageId = filenameWithExtension.split(".")[0];
-      const res = await deleteFromCloudinary(imageId);
+      await deleteFromCloudinary(imageId);
+      console.log('Old profile picture deleted from Cloudinary');
     } catch (error) {
-      throw new ApiError(
-        304,
-        `Error deleting profile picture: ${error.message}`
-      );
+      console.error('Error deleting old profile picture:', error.message);
+      // Don't throw error here as the main operation succeeded
     }
   }
 

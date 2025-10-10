@@ -1,5 +1,4 @@
 import { Router } from "express";
-import multer from "multer";
 import {
   registerUser,
   loginUser,
@@ -19,9 +18,9 @@ import {
   analyzeSkillGap,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
-const upload = multer({ dest: "uploads/" });
 
 router.route("/ping").get(ping);
 router.route("/auth-ping").get(verifyJWT, authPing);

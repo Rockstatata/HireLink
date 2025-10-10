@@ -7,15 +7,19 @@ import EducationCard from "./EducationCard";
 import EducationForm from "./EducationForm";
 import { useSelector } from "react-redux";
 import SkillsSearch from "../Common/SkillsSearch";
+import { userService } from "../../services/userService";
+import useUpdateUserData from "../../hooks/useUpdateUserData";
 
 function EditProfile() {
   const [showAddWorkExperience, setShowAddWorkExperience] = useState(false);
   const [showAddEducation, setShowAddEducation] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState(new Map());
+  const [skillsMessage, setSkillsMessage] = useState('');
 
   const { userData } = useSelector((store) => store.auth);
   const userEducation = userData?.userProfile?.education;
   const userWorkExperience = userData?.userProfile?.workExperience;
+  const updateUserData = useUpdateUserData();
 
   const [workExperienceFormData, setWorkExperienceFormData] = useState(null);
   const [educationFormData, setEducationFormData] = useState(null);
@@ -30,6 +34,41 @@ function EditProfile() {
       setSelectedSkills(initialSkills);
     }
   }, [userData]); // Trigger effect when userData changes
+
+  // Auto-save skills when they change
+  useEffect(() => {
+    const saveSkills = async () => {
+      try {
+        // Only save if we have user data and the skills have actually changed
+        if (userData?.userProfile?.skills) {
+          const currentSkills = Array.from(selectedSkills.keys());
+          const existingSkills = userData.userProfile.skills;
+          
+          // Check if skills have changed
+          const hasChanged = currentSkills.length !== existingSkills.length ||
+            currentSkills.some(skill => !existingSkills.includes(skill)) ||
+            existingSkills.some(skill => !currentSkills.includes(skill));
+          
+          if (hasChanged && currentSkills.length > 0) {
+            await userService.updateUserProfile({ 
+              skills: currentSkills 
+            });
+            updateUserData();
+            setSkillsMessage('Skills updated successfully!');
+            setTimeout(() => setSkillsMessage(''), 3000);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating skills:', error);
+        setSkillsMessage('Error updating skills. Please try again.');
+        setTimeout(() => setSkillsMessage(''), 3000);
+      }
+    };
+
+    // Debounce the save operation
+    const timeoutId = setTimeout(saveSkills, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [selectedSkills, userData, updateUserData]);
 
   if (!userData) {
     return (
@@ -143,6 +182,15 @@ function EditProfile() {
           </p>
         </div>
         <div className="w-full md:w-[70%] flex flex-col gap-3.5">
+          {skillsMessage && (
+            <div className={`p-2 rounded text-sm ${
+              skillsMessage.includes('Error') 
+                ? 'bg-red-100 text-red-700' 
+                : 'bg-green-100 text-green-700'
+            }`}>
+              {skillsMessage}
+            </div>
+          )}
           <SkillsSearch
             selectedSkills={selectedSkills}
             setSelectedSkills={setSelectedSkills}
