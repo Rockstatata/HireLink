@@ -25,7 +25,7 @@ const companyProfileSchema = new Schema({
   jobListings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
   companySocialProfiles: socialProfilesSchema,
   employeeBenefits: [String],
-  aiUseLimit: { type: Number, default: 1 },
+  aiUseLimit: { type: Number, default: 100 },
 });
 
 export const CompanyProfile = mongoose.model(
