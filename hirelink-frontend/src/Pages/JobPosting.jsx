@@ -568,7 +568,7 @@ function JobPosting() {
                 id="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                placeholder="E.g., 'Bengaluru, India'"
+                placeholder="E.g., 'Dhaka, Bangladesh'"
               />
             </div>
 

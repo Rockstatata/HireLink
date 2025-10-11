@@ -22,14 +22,14 @@ function Searchbar({ setSearch, setSelectedLocation }) {
   };
 
   useEffect(() => {
-    if (isSearching) {
+    if (isSearching && locationQuery) {
       const timerId = setTimeout(() => {
         getLocations();
       }, 500);
 
       return () => clearTimeout(timerId);
     }
-  }, [locationQuery, isSearching]);
+  }, [locationQuery, isSearching]); // getLocations is used directly here
 
   const handleLocationInputChange = (e) => {
     setLocationQuery(e.target.value);
@@ -75,7 +75,7 @@ function Searchbar({ setSearch, setSelectedLocation }) {
               <input
                 type="text"
                 name="search"
-                placeholder="Preferred location"
+                placeholder="City or Division (e.g., Dhaka, Chittagong)"
                 className="w-full h-8 px-1 focus:outline-none focus:ring-0 border-none rounded"
                 onChange={handleLocationInputChange}
                 value={locationQuery}

@@ -161,7 +161,7 @@ function AboutForm({ userData }) {
 
   const locationOptions = [
     { value: "default", label: "Select Country" },
-    { value: "india", label: "India" },
+    { value: "bangladesh", label: "Bangladesh" },
     { value: "united_states", label: "United States" },
     { value: "united_kingdom", label: "United Kingdom" },
     { value: "australia", label: "Australia" },

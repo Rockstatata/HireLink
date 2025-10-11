@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Checkbox from "../Common/FormComponents/Checkbox";
 import RadioButton from "../Common/FormComponents/RadioButton";
 
@@ -49,12 +49,13 @@ function SideBarFilter({ filters, setFilters }) {
     setFilters({
       datePosted: "",
       jobTypes: [],
-      experience: 30,
+      experience: "",
       salaryRange: {
-        from: 0,
-        to: 10000000000,
+        from: "",
+        to: "",
       },
       workMode: [],
+      company: "",
     });
   };
   return (
@@ -100,32 +101,32 @@ function SideBarFilter({ filters, setFilters }) {
               <div className="flex justify-between">
                 <Checkbox
                   label="Full-time"
-                  name="Full-time"
-                  checked={filters.jobTypes.includes("Full-time")}
-                  onChange={() => handleJobTypeChange("Full-time")}
+                  name="full-time"
+                  checked={filters.jobTypes.includes("full-time")}
+                  onChange={() => handleJobTypeChange("full-time")}
                   className={"text-text-secondary text-sm font-medium"}
                 />
                 <Checkbox
                   label="Part-time"
-                  name="Part-time"
-                  checked={filters.jobTypes.includes("Part-time")}
-                  onChange={() => handleJobTypeChange("Part-time")}
+                  name="part-time"
+                  checked={filters.jobTypes.includes("part-time")}
+                  onChange={() => handleJobTypeChange("part-time")}
                   className={"text-text-secondary text-sm font-medium"}
                 />
               </div>
               <div className="flex justify-between">
                 <Checkbox
                   label="Internship"
-                  name="Internship"
-                  checked={filters.jobTypes.includes("Internship")}
-                  onChange={() => handleJobTypeChange("Internship")}
+                  name="internship"
+                  checked={filters.jobTypes.includes("internship")}
+                  onChange={() => handleJobTypeChange("internship")}
                   className={"text-text-secondary text-sm font-medium"}
                 />
                 <Checkbox
                   label="Freelance"
-                  name="Freelance"
-                  checked={filters.jobTypes.includes("Freelance")}
-                  onChange={() => handleJobTypeChange("Freelance")}
+                  name="freelance"
+                  checked={filters.jobTypes.includes("freelance")}
+                  onChange={() => handleJobTypeChange("freelance")}
                   className={"text-text-secondary text-sm font-medium"}
                 />
               </div>
@@ -134,14 +135,14 @@ function SideBarFilter({ filters, setFilters }) {
 
           <div className="pr-4 border-b pb-4">
             <div className="py-4">
-              <span className="font-bold">Experience</span>
+              <span className="font-bold">Experience Level</span>
             </div>
             <div className=" ">
               <input
                 type="range"
                 min="0"
                 max="30"
-                value={filters.experience}
+                value={filters.experience || 0}
                 onChange={(e) => handleExperienceChange(e.target.value)}
                 className="slider h-2 w-full rounded-full accent-primary outline-none transition-colors duration-150 ease-linear cursor-pointer"
               />
@@ -149,9 +150,9 @@ function SideBarFilter({ filters, setFilters }) {
             <div className="flex justify-between px-1 text-text-secondary font-medium">
               <span>0 Yrs</span>
               <span className="font-bold text-primary">
-                {filters.experience} Yrs
+                {filters.experience || 0} Yrs
               </span>
-              <span>30 Yrs</span>
+              <span>30+ Yrs</span>
             </div>
           </div>
 
@@ -162,79 +163,79 @@ function SideBarFilter({ filters, setFilters }) {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between">
                 <RadioButton
-                  id="under-3LPA"
+                  id="under-50k"
                   name="salary-range"
-                  value="Under ₹3 LPA"
-                  label="Under ₹3 LPA"
+                  value="Under ৳50,000"
+                  label="Under ৳50,000"
                   checked={
                     filters.salaryRange.from === 0 &&
+                    filters.salaryRange.to === 50000
+                  }
+                  onChange={() => handleSalaryRangeChange(0, 50000)}
+                  className="text-text-secondary text-sm font-medium"
+                />
+                <RadioButton
+                  id="50k-1l"
+                  name="salary-range"
+                  value="৳50K - ৳1L"
+                  label="৳50K - ৳1L"
+                  checked={
+                    filters.salaryRange.from === 50000 &&
+                    filters.salaryRange.to === 100000
+                  }
+                  onChange={() => handleSalaryRangeChange(50000, 100000)}
+                  className="text-text-secondary text-sm font-medium"
+                />
+              </div>
+              <div className="flex justify-between">
+                <RadioButton
+                  id="1l-2l"
+                  name="salary-range"
+                  value="৳1L - ৳2L"
+                  label="৳1L - ৳2L"
+                  checked={
+                    filters.salaryRange.from === 100000 &&
+                    filters.salaryRange.to === 200000
+                  }
+                  onChange={() => handleSalaryRangeChange(100000, 200000)}
+                  className="text-text-secondary text-sm font-medium"
+                />
+                <RadioButton
+                  id="2l-3l"
+                  name="salary-range"
+                  value="৳2L - ৳3L"
+                  label="৳2L - ৳3L"
+                  checked={
+                    filters.salaryRange.from === 200000 &&
                     filters.salaryRange.to === 300000
                   }
-                  onChange={() => handleSalaryRangeChange(0, 300000)}
+                  onChange={() => handleSalaryRangeChange(200000, 300000)}
                   className="text-text-secondary text-sm font-medium"
                 />
+              </div>
+              <div className="flex justify-between">
                 <RadioButton
-                  id="3-6LPA"
+                  id="3l-5l"
                   name="salary-range"
-                  value="₹3 LPA - ₹6 LPA"
-                  label="₹3 LPA - ₹6 LPA"
+                  value="৳3L - ৳5L"
+                  label="৳3L - ৳5L"
                   checked={
                     filters.salaryRange.from === 300000 &&
-                    filters.salaryRange.to === 600000
+                    filters.salaryRange.to === 500000
                   }
-                  onChange={() => handleSalaryRangeChange(300000, 600000)}
-                  className="text-text-secondary text-sm font-medium"
-                />
-              </div>
-              <div className="flex justify-between">
-                <RadioButton
-                  id="6-10LPA"
-                  name="salary-range"
-                  value="₹6 LPA - ₹10 LPA"
-                  label="₹6 LPA - ₹10 LPA"
-                  checked={
-                    filters.salaryRange.from === 600000 &&
-                    filters.salaryRange.to === 1000000
-                  }
-                  onChange={() => handleSalaryRangeChange(600000, 1000000)}
+                  onChange={() => handleSalaryRangeChange(300000, 500000)}
                   className="text-text-secondary text-sm font-medium"
                 />
                 <RadioButton
-                  id="10-15LPA"
+                  id="more-than-5l"
                   name="salary-range"
-                  value="₹10 LPA - ₹15 LPA"
-                  label="₹10 LPA - ₹15 LPA"
+                  value="More than ৳5L"
+                  label="More than ৳5L"
                   checked={
-                    filters.salaryRange.from === 1000000 &&
-                    filters.salaryRange.to === 1500000
-                  }
-                  onChange={() => handleSalaryRangeChange(1000000, 1500000)}
-                  className="text-text-secondary text-sm font-medium"
-                />
-              </div>
-              <div className="flex justify-between">
-                <RadioButton
-                  id="15-20LPA"
-                  name="salary-range"
-                  value="₹15 LPA - ₹20 LPA"
-                  label="₹15 LPA - ₹20 LPA"
-                  checked={
-                    filters.salaryRange.from === 1500000 &&
-                    filters.salaryRange.to === 2000000
-                  }
-                  onChange={() => handleSalaryRangeChange(1500000, 2000000)}
-                  className="text-text-secondary text-sm font-medium"
-                />
-                <RadioButton
-                  id="more-than-20LPA"
-                  name="salary-range"
-                  value="More than ₹20 LPA"
-                  label="More than ₹20 LPA"
-                  checked={
-                    filters.salaryRange.from === 2000000 &&
+                    filters.salaryRange.from === 500000 &&
                     filters.salaryRange.to === 10000000000
                   }
-                  onChange={() => handleSalaryRangeChange(2000000, 10000000000)}
+                  onChange={() => handleSalaryRangeChange(500000, 10000000000)}
                   className="text-text-secondary text-sm font-medium"
                 />
               </div>
@@ -249,25 +250,25 @@ function SideBarFilter({ filters, setFilters }) {
               <div className="flex justify-between">
                 <Checkbox
                   label="On-site"
-                  name="Onsite"
-                  checked={filters.workMode.includes("Onsite")}
-                  onChange={() => handleWorkModeChange("Onsite")}
+                  name="onsite"
+                  checked={filters.workMode.includes("onsite")}
+                  onChange={() => handleWorkModeChange("onsite")}
                   className="text-text-secondary text-sm font-medium"
                 />
                 <Checkbox
                   label="Hybrid"
-                  name="Hybrid"
-                  checked={filters.workMode.includes("Hybrid")}
-                  onChange={() => handleWorkModeChange("Hybrid")}
+                  name="hybrid"
+                  checked={filters.workMode.includes("hybrid")}
+                  onChange={() => handleWorkModeChange("hybrid")}
                   className="text-text-secondary text-sm font-medium"
                 />
               </div>
               <div className="flex justify-between">
                 <Checkbox
                   label="Remote"
-                  name="Remote"
-                  checked={filters.workMode.includes("Remote")}
-                  onChange={() => handleWorkModeChange("Remote")}
+                  name="remote"
+                  checked={filters.workMode.includes("remote")}
+                  onChange={() => handleWorkModeChange("remote")}
                   className="text-text-secondary text-sm font-medium"
                 />
               </div>

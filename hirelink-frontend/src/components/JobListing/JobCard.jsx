@@ -2,6 +2,8 @@ import React from "react";
 import Dot from "../Dot";
 
 function JobCard({ job, redirectToDetail }) {
+  console.log('JobCard received job:', job); // Debug log
+  
   const {
     title,
     salary,
@@ -13,12 +15,18 @@ function JobCard({ job, redirectToDetail }) {
     createdAt,
   } = job;
 
-  // Handle both old and new data structure
-  const companyLogo = company?.companyLogo || job.employer?.userProfile?.companyLogo;
-  const companyName = company?.companyName || job.employer?.userProfile?.companyName;
-  const salaryRange = salary || job.salaryRange;
-  const type = jobType || job.type;
-  const rawDatePosted = createdAt || job.datePosted;
+  // Standardize company data access
+  const companyLogo = company?.companyLogo || company?.logo || "https://via.placeholder.com/44x44?text=C";
+  const companyName = company?.companyName || company?.name || "Company Name Not Available";
+  
+  // Standardize salary data access
+  const salaryRange = salary;
+  
+  // Standardize job type
+  const type = jobType;
+  
+  // Standardize date
+  const rawDatePosted = createdAt;
 
   const datePosted = new Date(rawDatePosted);
 
@@ -44,24 +52,33 @@ function JobCard({ job, redirectToDetail }) {
 
   let color, bgColor;
   switch (type) {
+    case "full-time":
     case "Full-time":
       color = "text-primary";
-      bgColor = "bg-primary-light bg-opacity-20";
+      bgColor = "bg-primary/10";
       break;
+    case "part-time":
     case "Part-time":
       color = "text-accent";
-      bgColor = "bg-accent-light bg-opacity-20";
+      bgColor = "bg-accent/10";
       break;
+    case "internship":
     case "Internship":
       color = "text-secondary";
-      bgColor = "bg-secondary-light bg-opacity-20";
+      bgColor = "bg-secondary/10";
       break;
+    case "freelance":
     case "Freelance":
-      color = "text-accent-dark";
-      bgColor = "bg-accent-dark bg-opacity-20";
+      color = "text-success";
+      bgColor = "bg-success/10";
+      break;
+    case "contract":
+    case "Contract":
+      color = "text-warning";
+      bgColor = "bg-warning/10";
       break;
     default:
-      color = "text-text-secondary";
+      color = "text-neutral-700";
       bgColor = "bg-neutral-200";
   }
 
@@ -94,12 +111,18 @@ function JobCard({ job, redirectToDetail }) {
 
                 <div className="flex gap-3 items-center  md:flex-row text-xs md:text-sm">
                   <div className={`tag py-px px-2.5 rounded-xl ${bgColor}`}>
-                    <span className={color}>{type}</span>
+                    <span className={color}>
+                      {type?.charAt(0).toUpperCase() + type?.slice(1).replace('-', ' ') || 'Full-time'}
+                    </span>
                   </div>
                   <Dot />
                   <div className="strippend">
                     <span className="text-text-secondary">
-                      {salaryRange?.currency || '₹'} {salaryRange?.min || salaryRange?.from || 0}-{salaryRange?.currency || '₹'} {salaryRange?.max || salaryRange?.to || 0} {salaryRange?.currency === 'USD' ? 'USD' : salaryRange?.currency === 'EUR' ? 'EUR' : 'INR'}
+                      {salaryRange ? (
+                        `৳${(salaryRange.min || 0).toLocaleString()} - ৳${(salaryRange.max || 0).toLocaleString()}`
+                      ) : (
+                        'Salary not specified'
+                      )}
                     </span>
                   </div>
                 </div>

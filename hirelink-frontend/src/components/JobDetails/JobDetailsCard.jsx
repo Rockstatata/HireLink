@@ -5,37 +5,60 @@ import { useSelector } from "react-redux";
 function JobDetailsCard({ jobData }) {
   const { userData } = useSelector((store) => store.auth);
 
+  // Handle backend data structure properly
   const {
     title,
-    salaryRange,
+    salary = {},
     location,
-    employer,
-    experience,
+    company = {},
+    experience = {},
     numberOfOpenings,
     numberOfApplicants,
+    _id,
+    createdAt,
   } = jobData;
 
-  const datePosted = new Date(jobData?.datePosted);
+  console.log('JobDetailsCard received jobData:', jobData);
 
+  // Use createdAt from backend
+  const datePosted = new Date(createdAt);
+  
+  // Calculate time ago properly
   const now = new Date();
-
   const diffTime = Math.abs(now - datePosted);
   const diffMinutes = Math.floor(diffTime / (1000 * 60));
   const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30));
 
-  let timeAgo;
-
+  let timeAgo = "Just now";
   if (diffMinutes < 60) {
-    timeAgo = diffMinutes + " minutes ago";
+    timeAgo = diffMinutes > 0 ? `${diffMinutes} minutes ago` : "Just now";
   } else if (diffHours < 24) {
-    timeAgo = diffHours + " hours ago";
+    timeAgo = `${diffHours} hours ago`;
   } else if (diffDays < 30) {
-    timeAgo = diffDays + " days ago";
+    timeAgo = `${diffDays} days ago`;
   } else {
-    timeAgo = diffMonths + " months ago";
+    timeAgo = `${diffMonths} months ago`;
   }
+
+  // Get company info from proper backend structure
+  const companyName = company?.companyName || "Company Name Not Available";
+  const companyLogo = company?.companyLogo || "https://via.placeholder.com/80x80?text=C";
+  
+  // Get salary info
+  const salaryMin = salary?.min;
+  const salaryMax = salary?.max;
+  const salaryDisplay = salaryMin && salaryMax 
+    ? `৳${salaryMin.toLocaleString()} - ৳${salaryMax.toLocaleString()}`
+    : "Salary not disclosed";
+
+  // Get experience range
+  const experienceMin = experience?.min || 0;
+  const experienceMax = experience?.max || 0;
+  const experienceDisplay = experienceMax > experienceMin 
+    ? `${experienceMin}-${experienceMax} Years`
+    : `${experienceMin}+ Years`;
 
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -113,17 +136,17 @@ function JobDetailsCard({ jobData }) {
   };
 
   return (
-    <div className="flex flex-col gap-6 border border-neutral-200 bg-background p-4 rounded-3xl shadow-md">
+    <div className="flex flex-col gap-6 border border-neutral-200 bg-background p-6 rounded-3xl shadow-lg">
       {/* Success Messages */}
       {showAppliedMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex justify-between items-center">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex justify-between items-center animate-in slide-in-from-top duration-300">
           <div>
-            <h4 className="font-semibold text-green-800">Application Successful!</h4>
+            <h4 className="font-semibold text-green-800 mb-1">Application Successful!</h4>
             <p className="text-green-700 text-sm">Your application has been submitted successfully. Your profile has been shared with the recruiter.</p>
           </div>
           <button 
             onClick={handleAppliedOkay}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
           >
             Okay
           </button>
@@ -131,19 +154,20 @@ function JobDetailsCard({ jobData }) {
       )}
       
       {showSavedMessage && (
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-          <h4 className="font-semibold text-primary">Job Saved Successfully!</h4>
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 animate-in slide-in-from-top duration-300">
+          <h4 className="font-semibold text-primary mb-1">Job Saved Successfully!</h4>
           <p className="text-primary/80 text-sm">The job has been saved successfully. You can view it in your saved jobs.</p>
         </div>
       )}
 
-      <div className="flex justify-between border-b border-neutral-200 pb-5">
-        <div className="flex flex-col gap-5">
+      {/* Job Header */}
+      <div className="flex flex-col md:flex-row md:justify-between border-b border-neutral-200 pb-6 gap-4">
+        <div className="flex flex-col gap-4 flex-1">
           <div className="flex flex-col gap-1.5">
-            <p className="text-xl font-medium text-text-primary">{title} </p>
-            <p className="text-sm text-text-secondary font-medium">
-              {employer?.userProfile?.companyName}
-            </p>
+            <p className="text-xl font-medium text-text-primary">{title}</p>
+            <div className="text-lg font-semibold text-text-primary">
+              {companyName}
+            </div>
           </div>
           <div className="text-text-secondary text-sm flex flex-col gap-2">
             <div className="flex gap-5 ">
@@ -151,16 +175,14 @@ function JobDetailsCard({ jobData }) {
                 <span>
                   <i className="fa-solid fa-briefcase"></i>
                 </span>
-                <span>{`${experience} Years`}</span>
+                <span>{experienceDisplay}</span>
               </div>
               <div className="flex gap-3">
                 <span>
-                  <i className="fa-solid fa-indian-rupee-sign"></i>{" "}
+                  <span className="text-lg">৳</span>{" "}
                 </span>
                 <span>
-                  {salaryRange
-                    ? `${salaryRange.from} to ${salaryRange.to}`
-                    : "Not Disclosed"}
+                  {salaryDisplay}
                 </span>
               </div>
             </div>
@@ -176,31 +198,31 @@ function JobDetailsCard({ jobData }) {
         </div>
         <div>
           <div className="h-20 w-20 rounded-3xl border border-neutral-200 overflow-hidden flex justify-center items-center bg-background-secondary">
-            <img src={employer?.userProfile?.companyLogo} alt="Company Logo" />
+            <img src={companyLogo} alt="Company Logo" />
           </div>
         </div>
       </div>
-      <div className="flex justify-between items-center text-sm">
-        <div className="flex gap-3 ">
+      {/* Job Stats */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm gap-4">
+        <div className="flex flex-wrap gap-4">
           <div className="font-light text-text-secondary">
-            Posted: <span className="font-medium text-text-primary"> {timeAgo}</span>
+            Posted: <span className="font-medium text-text-primary">{timeAgo}</span>
           </div>
           <div className="font-light text-text-secondary">
             Openings: <span className="font-medium text-text-primary">{numberOfOpenings}</span>
           </div>
           <div className="font-light text-text-secondary">
-            Applicants:{" "}
-            <span className="font-medium text-text-primary">{numberOfApplicants}</span>
+            Applicants: <span className="font-medium text-text-primary">{numberOfApplicants}</span>
           </div>
         </div>
-        <div className="flex gap-5">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
-            className={`border h-10 w-20 rounded-3xl font-medium transition-all duration-200 hover:scale-105 ${
+            className={`border h-11 px-6 rounded-xl font-medium transition-all duration-200 hover:scale-105 shadow-sm ${
               userData?.role === "jobSeeker"
                 ? hasSaved 
-                  ? "border-green-500 text-green-500 bg-green-50"
-                  : "border-primary text-primary hover:bg-primary hover:text-white"
-                : "border-neutral-400 text-neutral-400 cursor-not-allowed"
+                  ? "border-green-500 text-green-500 bg-green-50 hover:bg-green-100"
+                  : "border-primary text-primary hover:bg-primary hover:text-white hover:shadow-md"
+                : "border-neutral-400 text-neutral-400 cursor-not-allowed bg-neutral-50"
             }`}
             onClick={saveJob}
             disabled={userData?.role !== "jobSeeker" || saving || hasSaved}
@@ -214,14 +236,15 @@ function JobDetailsCard({ jobData }) {
                 : ""
             }
           >
-            {saving ? "Saving.." : hasSaved ? "Saved" : "Save"}
+            <i className={`mr-2 ${hasSaved ? "fas fa-bookmark" : "far fa-bookmark"}`}></i>
+            {saving ? "Saving..." : hasSaved ? "Saved" : "Save"}
           </button>
           <button
-            className={`h-10 w-20 rounded-3xl font-medium transition-all duration-200 hover:scale-105 ${
+            className={`h-11 px-8 rounded-xl font-medium transition-all duration-200 hover:scale-105 shadow-md ${
               userData?.role === "jobSeeker"
                 ? hasApplied
-                  ? "bg-green-500 text-white"
-                  : "bg-primary text-white hover:bg-primary-dark"
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-primary text-white hover:bg-primary-dark hover:shadow-lg"
                 : "bg-neutral-400 text-white cursor-not-allowed"
             }`}
             onClick={applyForJob}
@@ -236,7 +259,8 @@ function JobDetailsCard({ jobData }) {
                 : ""
             }
           >
-            {applying ? "Applying.." : hasApplied ? "Applied" : "Apply"}
+            <i className={`mr-2 ${hasApplied ? "fas fa-paper-plane" : "far fa-paper-plane"}`}></i>
+            {applying ? "Applying..." : hasApplied ? "Applied" : "Apply Now"}
           </button>
         </div>
       </div>

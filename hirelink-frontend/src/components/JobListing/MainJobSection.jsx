@@ -30,17 +30,19 @@ function MainJobSection() {
 
   const getJobs = async (filters) => {
     setLoading(true);
+    console.log('MainJobSection: Calling getJobs with filters:', filters);
     try {
       const res = await contentService.getJobs(filters);
-      console.log('Jobs API response:', res);
+      console.log('MainJobSection: Jobs API response:', res);
       if (res && res.jobs) {
+        console.log('MainJobSection: Setting jobs, count:', res.jobs.length);
         setJobs(Array.isArray(res.jobs) ? res.jobs : []);
       } else {
-        console.warn('Unexpected response structure:', res);
+        console.warn('MainJobSection: Unexpected response structure:', res);
         setJobs([]);
       }
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error('MainJobSection: Error fetching jobs:', error);
       setJobs([]);
     }
     setLoading(false);
@@ -82,7 +84,7 @@ function MainJobSection() {
           <div>
             {loading ? (
               <div className="flex justify-center items-center p-8">
-                <div className="text-lg text-gray-600">Loading jobs...</div>
+                <div className="text-lg text-neutral-600">Loading jobs...</div>
               </div>
             ) : jobs.length > 0 ? (
               jobs.map((job) => (
@@ -94,7 +96,7 @@ function MainJobSection() {
               ))
             ) : (
               <div className="flex justify-center items-center p-8">
-                <div className="text-lg text-gray-600">No jobs found</div>
+                <div className="text-lg text-neutral-600">No jobs found</div>
               </div>
             )}
           </div>

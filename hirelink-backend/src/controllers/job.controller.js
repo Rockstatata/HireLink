@@ -130,6 +130,8 @@ const getJobs = asyncHandler(async (req, res) => {
     datePosted,
   } = req.query;
 
+  console.log('Raw query params:', req.query);
+
   const filter = { isActive: true };
 
   // Build search filters
@@ -145,12 +147,20 @@ const getJobs = asyncHandler(async (req, res) => {
     filter.location = { $regex: location, $options: 'i' };
   }
 
+  // Handle multiple job types (can be array or single value)
   if (jobType) {
-    filter.jobType = jobType;
+    const jobTypes = Array.isArray(jobType) ? jobType : [jobType];
+    if (jobTypes.length > 0) {
+      filter.jobType = { $in: jobTypes };
+    }
   }
 
+  // Handle multiple work modes (can be array or single value)
   if (workMode) {
-    filter.workMode = workMode;
+    const workModes = Array.isArray(workMode) ? workMode : [workMode];
+    if (workModes.length > 0) {
+      filter.workMode = { $in: workModes };
+    }
   }
 
   if (category) {
@@ -161,6 +171,7 @@ const getJobs = asyncHandler(async (req, res) => {
     filter.company = company;
   }
 
+  // Salary range filtering
   if (minSalary || maxSalary) {
     const salaryFilter = {};
     if (minSalary && !isNaN(parseInt(minSalary))) {
@@ -169,13 +180,14 @@ const getJobs = asyncHandler(async (req, res) => {
     if (maxSalary && !isNaN(parseInt(maxSalary))) {
       salaryFilter['salary.max'] = { $lte: parseInt(maxSalary) };
     }
-    // Only add to filter if we have valid salary constraints
     Object.assign(filter, salaryFilter);
   }
 
+  // Experience filtering - job should accept candidates with user's experience
   if (experience && !isNaN(parseInt(experience))) {
-    filter['experience.min'] = { $lte: parseInt(experience) };
-    filter['experience.max'] = { $gte: parseInt(experience) };
+    const expValue = parseInt(experience);
+    filter['experience.min'] = { $lte: expValue };
+    filter['experience.max'] = { $gte: expValue };
   }
 
   // Date posted filter
@@ -204,10 +216,12 @@ const getJobs = asyncHandler(async (req, res) => {
   const limitNumber = parseInt(limit);
   const startIndex = (pageNumber - 1) * limitNumber;
   
-  console.log('Job query filter:', JSON.stringify(filter, null, 2));
+  console.log('=== getJobs Debug Info ===');
+  console.log('Raw query params:', req.query);
+  console.log('Constructed filter:', JSON.stringify(filter, null, 2));
   
   const total = await Job.countDocuments(filter);
-  console.log('Total jobs found:', total);
+  console.log('Total jobs matching filter:', total);
 
   const jobs = await Job.find(filter)
     .populate('company', 'companyName companyLogo industry companyWebsite address')

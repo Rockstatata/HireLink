@@ -16,7 +16,7 @@ const jobSchema = new Schema(
     salary: {
       min: { type: Number, required: true, min: 0 },
       max: { type: Number, required: true, min: 0 },
-      currency: { type: String, default: "USD" },
+      currency: { type: String, default: "BDT" },
       negotiable: { type: Boolean, default: false },
     },
     jobType: {
