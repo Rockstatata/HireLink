@@ -144,12 +144,12 @@ function Login() {
                   <span className="text-error text-sm ml-2">
                     {errorMessage}
                   </span>
-                  <a
-                    href="#"
+                  <Link
+                    to="/forgot-password"
                     className="text-right font-light text-text-primary cursor-pointer mb-3 underline"
                   >
                     Forget Password?
-                  </a>
+                  </Link>
                 </div>
 
                 <button className="bg-primary rounded-md text-text-inverse font-normal text-sm h-11 hover:bg-primary-dark transition-colors">
