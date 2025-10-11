@@ -505,6 +505,59 @@ const userPublicProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "User profile fetch successful"));
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    console.log("Forgot password request received:", { 
+      email, 
+      hasPassword: !!password, 
+      hasConfirmPassword: !!confirmPassword 
+    });
+
+    if (!email || !password || !confirmPassword) {
+      throw new ApiError(400, "Email, password, and confirm password are required");
+    }
+
+    if (password !== confirmPassword) {
+      throw new ApiError(400, "Passwords do not match");
+    }
+
+    if (password.length < 6) {
+      throw new ApiError(400, "Password must be at least 6 characters long");
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      throw new ApiError(404, "User not found with this email");
+    }
+
+    console.log("User found, updating password...");
+
+    // Store old password for comparison
+    const oldPasswordHash = user.password;
+    
+    // Update user password directly - the pre-save hook will hash it
+    user.password = password;
+    user.markModified('password'); // Explicitly mark as modified
+    
+    const savedUser = await user.save();
+
+    console.log("Password updated successfully");
+    console.log("Old hash:", oldPasswordHash);
+    console.log("New hash:", savedUser.password);
+    console.log("Hashes are different:", oldPasswordHash !== savedUser.password);
+
+    return res.status(200).json(
+      new ApiResponse(200, {}, "Password updated successfully")
+    );
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    throw error;
+  }
+});
+
 export { 
   registerUser, 
   loginUser, 
@@ -522,5 +575,6 @@ export {
   updateResume,
   userPublicProfile,
   analyzeSkillGap,
-  changePassword
+  changePassword,
+  forgotPassword
 };

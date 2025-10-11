@@ -13,6 +13,7 @@ export const registerUser = (data) => apiCall.post('/users/signup', data);
 export const logoutUser = () => apiCall.post('/users/logout');
 export const getCurrentUser = () => apiCall.get('/users/current-user');
 export const updateUserProfile = (data) => apiCall.put('/users/update-profile', data);
+export const forgotPassword = (data) => apiCall.post('/users/forgot-password', data);
 
 // Enhanced userService object with all methods
 export const userService = {
@@ -39,6 +40,7 @@ export const userService = {
   deleteEducation,
   changePassword,
   checkApplicationStatus,
+  forgotPassword: forgotPassword,
 };
 
 async function login(userData) {
