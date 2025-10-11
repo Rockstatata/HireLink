@@ -19,6 +19,7 @@ import UserPublicProfile from "../Pages/UserPublicProfile";
 import Messages from "../Pages/Messages";
 import SavedJobs from "../Pages/SavedJobs";
 import MyApplications from "../Pages/MyApplications";
+import ForgotPassword from "../Pages/ForgotPassword";
 
 
 
@@ -28,6 +29,7 @@ function AllRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route path="/jobs" element={<PrivateRoutes><JobListing /></PrivateRoutes>} />
       <Route path="/jobs/:id" element={<PrivateRoutes><JobDetails /></PrivateRoutes>} />

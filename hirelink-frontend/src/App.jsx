@@ -11,7 +11,7 @@ function App() {
   const { userData, loading } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const location = useLocation();
-  const hideOnRoutes = ["/login", "/signup"];
+  const hideOnRoutes = ["/login", "/signup", "/forgot-password"];
   const updateUser = useUpdateUserData();
   const [initialLoad, setInitialLoad] = useState(true);
 
