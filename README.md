@@ -47,7 +47,7 @@ HIRELINK is a full-stack web application designed to simplify the job applicatio
 * **User Authentication & Authorization** – JWT-based authentication system with user roles (job seeker, employer, admin).
 * **Profile Management** – Job seekers can update their professional profiles, add skills, work experience, and upload resumes.
 * **Job Listings & Search** – Employers can post jobs, and job seekers can search and apply with advanced filters.
-* **AI-Powered Job Description Generation** – Generate tailored job descriptions using OpenAI's API.
+* **AI-Powered Job Description Generation** – Generate tailored job descriptions using groqAi's API.
 * **Application Tracking** – Job seekers can track applications, interviews, and offers.
 * **Employer Dashboard** – A dedicated dashboard for employers to manage job postings, applicants, and shortlisting.
 * **Networking** – Connect with others on the platform to expand your professional network (similar to LinkedIn).
@@ -72,7 +72,7 @@ HIRELINK is a full-stack web application designed to simplify the job applicatio
   * **Express.js** (web framework)
   * **MongoDB** (NoSQL database, with Mongoose for schema management)
   * **JWT** (for secure authentication)
-  * **OpenAI API** (for AI-powered job description generation)
+  * **groqAi API** (for AI-powered job description generation)
   * **Cloudinary** (for image and file uploads)
 
 * **Deployment**:
